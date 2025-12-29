@@ -3,7 +3,24 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? window.location.origin + '/api' : 'http://localhost/api')
+// Auto-detect API URL based on current host
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    // When running in browser, use current host with port 3001
+    const host = window.location.hostname
+    return `http://${host}:3001`
+  }
+  // Fallback for SSR
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+}
+
+const API_URL = getApiUrl()
+
+// Debug: Log API URL
+if (typeof window !== 'undefined') {
+  console.log('API URL:', API_URL)
+  console.log('Current hostname:', window.location.hostname)
+}
 
 interface Student {
   id: number
@@ -41,15 +58,20 @@ export default function Home() {
     e.preventDefault()
     setError('')
     try {
+      console.log('Attempting login to:', `${API_URL}/auth/login`)
+      console.log('Username:', username)
       const response = await axios.post(`${API_URL}/auth/login`, {
         username,
         password,
       })
+      console.log('Login successful:', response.data)
       localStorage.setItem('token', response.data.access_token)
       setIsAuthenticated(true)
       fetchStudents()
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed')
+      console.error('Login error:', err)
+      console.error('Error response:', err.response)
+      setError(err.response?.data?.message || err.message || 'Login failed')
     }
   }
 

@@ -27,12 +27,45 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('students')
 @UseGuards(JwtAuthGuard)
 export class StudentController {
+  /**
+   * ⚠️ All endpoints in this controller require JWT authentication.
+   * 
+   * To use these endpoints:
+   * 1. First, login using POST /auth/login to get access_token
+   * 2. Copy the access_token from response
+   * 3. Click "Authorize" button in Swagger UI (🔒 icon at top)
+   * 4. Paste token: Bearer {your_access_token}
+   * 5. Click "Authorize" then "Close"
+   * 6. Now you can test all protected endpoints
+   */
   constructor(private readonly studentService: StudentService) {}
 
   @Post()
   @ApiOperation({
-    summary: 'Create a new student',
-    description: 'Create a new student record. All fields except age and address are required.',
+    summary: '➕ Create New Student',
+    description: `
+**Create a new student record**
+
+**Required:** JWT Access Token (click 🔒 Authorize button above)
+
+**Required Fields:**
+- \`name\` (string): Full name of the student
+- \`email\` (string): Valid email address
+
+**Optional Fields:**
+- \`age\` (number): Age of the student
+- \`address\` (string): Address of the student
+
+**Example Request:**
+\`\`\`json
+{
+  "name": "Nguyen Van A",
+  "email": "nguyenvana@example.com",
+  "age": 20,
+  "address": "123 Main Street, Ho Chi Minh City"
+}
+\`\`\`
+    `,
   })
   @ApiBody({ type: CreateStudentDto })
   @ApiResponse({
@@ -54,8 +87,14 @@ export class StudentController {
 
   @Get()
   @ApiOperation({
-    summary: 'Get all students',
-    description: 'Retrieve a list of all students in the system.',
+    summary: '📋 Get All Students',
+    description: `
+**Retrieve a list of all students**
+
+**Required:** JWT Access Token (click 🔒 Authorize button above)
+
+Returns an array of all student records in the system.
+    `,
   })
   @ApiResponse({
     status: 200,
@@ -72,8 +111,17 @@ export class StudentController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Get a student by ID',
-    description: 'Retrieve detailed information about a specific student by their ID.',
+    summary: '🔍 Get Student by ID',
+    description: `
+**Retrieve detailed information about a specific student**
+
+**Required:** JWT Access Token (click 🔒 Authorize button above)
+
+**Parameters:**
+- \`id\` (path parameter): Student ID (number)
+
+**Example:** \`GET /students/1\`
+    `,
   })
   @ApiParam({
     name: 'id',
@@ -100,8 +148,25 @@ export class StudentController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: 'Update a student',
-    description: 'Update student information. Only provided fields will be updated.',
+    summary: '✏️ Update Student',
+    description: `
+**Update student information**
+
+**Required:** JWT Access Token (click 🔒 Authorize button above)
+
+**Parameters:**
+- \`id\` (path parameter): Student ID to update
+
+**Note:** Only provided fields will be updated. Fields not included in request will remain unchanged.
+
+**Example Request:**
+\`\`\`json
+{
+  "name": "Nguyen Van B",
+  "age": 21
+}
+\`\`\`
+    `,
   })
   @ApiParam({
     name: 'id',
@@ -133,8 +198,19 @@ export class StudentController {
 
   @Delete(':id')
   @ApiOperation({
-    summary: 'Delete a student',
-    description: 'Permanently delete a student record from the system.',
+    summary: '🗑️ Delete Student',
+    description: `
+**Permanently delete a student record**
+
+**Required:** JWT Access Token (click 🔒 Authorize button above)
+
+**Parameters:**
+- \`id\` (path parameter): Student ID to delete
+
+**⚠️ Warning:** This action cannot be undone. The student record will be permanently deleted.
+
+**Example:** \`DELETE /students/1\`
+    `,
   })
   @ApiParam({
     name: 'id',
