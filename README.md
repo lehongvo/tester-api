@@ -18,6 +18,7 @@ tester_api/
 - ✅ Student CRUD: Create, Read, Update, Delete
 - ✅ PostgreSQL Database
 - ✅ Docker support
+- ✅ Swagger API Documentation
 
 ### Frontend (Next.js)
 - ✅ Dashboard quản lý sinh viên
@@ -38,6 +39,7 @@ docker-compose up --build
 2. Truy cập:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
+- Swagger Documentation: http://localhost:3001/api
 - PostgreSQL: localhost:5432
 
 ### Chạy thủ công
