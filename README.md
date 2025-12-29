@@ -109,5 +109,9 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 - Database sẽ tự động sync schema khi chạy (synchronize: true) - chỉ dùng cho development
 - JWT token được lưu trong localStorage của browser
 
-# tester-api
-# tester-api
+## Swagger Documentation
+
+Sau khi chạy backend, truy cập Swagger UI tại:
+- http://localhost:3001/api
+
+Swagger cung cấp tài liệu API đầy đủ với khả năng test trực tiếp các endpoints.
