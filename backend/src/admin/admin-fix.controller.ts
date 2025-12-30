@@ -29,4 +29,3 @@ Use this if admin role was set incorrectly and you cannot access admin endpoints
     return this.adminService.fixAdminRole();
   }
 }
-
