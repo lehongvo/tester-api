@@ -38,7 +38,13 @@ export class StudentFeaturesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Student role required' })
   async getMyAccount(@Request() req) {
-    return this.studentFeaturesService.getMyAccount(req.user.userId);
+    console.log('getMyAccount CONTROLLER - req.user:', JSON.stringify(req.user));
+    const userId = req.user?.userId || req.user?.sub;
+    const parsedUserId = typeof userId === 'number' ? userId : parseInt(String(userId), 10);
+    if (isNaN(parsedUserId)) {
+      throw new Error(`Invalid user ID: ${userId}`);
+    }
+    return this.studentFeaturesService.getMyAccount(parsedUserId);
   }
 
   @Post('transactions/transfer')
@@ -79,7 +85,13 @@ export class StudentFeaturesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Student role required' })
   async getMyTransactions(@Request() req) {
-    return this.studentFeaturesService.getMyTransactions(req.user.userId);
+    console.log('getMyTransactions - req.user:', JSON.stringify(req.user));
+    const userId = req.user?.userId || req.user?.sub;
+    const parsedUserId = typeof userId === 'number' ? userId : parseInt(String(userId), 10);
+    if (isNaN(parsedUserId)) {
+      throw new Error(`Invalid user ID: ${userId}`);
+    }
+    return this.studentFeaturesService.getMyTransactions(parsedUserId);
   }
 
   @Get('me/enrollments')
@@ -91,10 +103,16 @@ export class StudentFeaturesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Student role required' })
   async getMyEnrollments(@Request() req) {
-    return this.studentFeaturesService.getMyEnrollments(req.user.userId);
+    console.log('getMyEnrollments - req.user:', JSON.stringify(req.user));
+    const userId = req.user?.userId || req.user?.sub;
+    const parsedUserId = typeof userId === 'number' ? userId : parseInt(String(userId), 10);
+    if (isNaN(parsedUserId)) {
+      throw new Error(`Invalid user ID: ${userId}`);
+    }
+    return this.studentFeaturesService.getMyEnrollments(parsedUserId);
   }
 
-  @Get('students/list')
+  @Get('transfer/students')
   @ApiOperation({
     summary: '👥 Get Students List for Transfer (Student Only)',
     description: 'Get list of all students (excluding self) for transfer selection. Only students can access this endpoint.',
@@ -103,16 +121,20 @@ export class StudentFeaturesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Student role required' })
   async getStudentsList(@Request() req) {
-    console.log('getStudentsList - req.user:', req.user);
+    console.log('getStudentsList - req.user:', JSON.stringify(req.user));
     const userId = req.user?.userId || req.user?.sub;
+    console.log('getStudentsList - userId from req.user:', userId, typeof userId);
     if (!userId) {
+      console.error('User ID not found in req.user:', req.user);
       throw new Error('User ID not found in request');
     }
     const parsedUserId = typeof userId === 'number' ? userId : parseInt(String(userId), 10);
+    console.log('getStudentsList - parsedUserId:', parsedUserId, typeof parsedUserId);
     if (isNaN(parsedUserId)) {
       console.error('Invalid userId:', userId, typeof userId);
       throw new Error(`Invalid user ID: ${userId}`);
     }
+    console.log('getStudentsList - calling service with userId:', parsedUserId);
     return this.studentFeaturesService.getStudentsList(parsedUserId);
   }
 }

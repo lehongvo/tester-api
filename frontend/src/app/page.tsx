@@ -354,7 +354,7 @@ export default function Home() {
         axios.get(`${API_URL}/transactions/history`, { headers: getAuthHeaders() }),
         axios.get(`${API_URL}/me/enrollments`, { headers: getAuthHeaders() }),
         axios.get(`${API_URL}/courses`, { headers: getAuthHeaders() }),
-        axios.get(`${API_URL}/students/list`, { headers: getAuthHeaders() }).catch(() => ({ data: [] })),
+        axios.get(`${API_URL}/transfer/students`, { headers: getAuthHeaders() }).catch(() => ({ data: [] })),
       ])
       setAccount(accountRes.data)
       setMyTransactions(transactionsRes.data)
@@ -531,23 +531,24 @@ export default function Home() {
         {loading ? (
               <div className="loading"></div>
         ) : (
+          <div style={{ maxHeight: '500px', overflowY: 'auto', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
           <table className="table">
-            <thead>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
               <tr>
                 <th>ID</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Age</th>
                 <th>Address</th>
-                    <th>Balance (USD)</th>
+                      <th>Balance (USD)</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {students.length === 0 ? (
                 <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>
-                        No students found.
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>
+                          No students found.
                   </td>
                 </tr>
               ) : (
@@ -558,18 +559,18 @@ export default function Home() {
                     <td>{student.email}</td>
                     <td>{student.age || '-'}</td>
                     <td>{student.address || '-'}</td>
-                        <td style={{ fontWeight: 'bold', color: '#28a745' }}>
-                          ${student.balance?.toFixed(2) || '0.00'}
-                        </td>
+                          <td style={{ fontWeight: 'bold', color: '#28a745' }}>
+                            ${student.balance?.toFixed(2) || '0.00'}
+                          </td>
                     <td>
                       <button
-                            onClick={() => {
-                              setSelectedStudentId(student.userId || student.id)
-                              setShowSetBalanceModal(true)
-                            }}
+                              onClick={() => {
+                                setSelectedStudentId(student.userId || student.id)
+                                setShowSetBalanceModal(true)
+                              }}
                         className="btn btn-primary"
-                          >
-                            Set Balance
+                            >
+                              Set Balance
                       </button>
                     </td>
                   </tr>
@@ -577,6 +578,7 @@ export default function Home() {
               )}
             </tbody>
           </table>
+          </div>
         )}
           </div>
 
@@ -585,28 +587,30 @@ export default function Home() {
             {loading ? (
               <div className="loading"></div>
             ) : (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Price (USD)</th>
-                    <th>Instructor</th>
-                    <th>Duration</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {courses.map((course) => (
-                    <tr key={course.id}>
-                      <td>{course.id}</td>
-                      <td>{course.name}</td>
-                      <td>${course.price}</td>
-                      <td>{course.instructor || '-'}</td>
-                      <td>{course.duration || '-'}</td>
+              <div style={{ maxHeight: '500px', overflowY: 'auto', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                <table className="table">
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Price (USD)</th>
+                      <th>Instructor</th>
+                      <th>Duration</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {courses.map((course) => (
+                      <tr key={course.id}>
+                        <td>{course.id}</td>
+                        <td>{course.name}</td>
+                        <td>${course.price}</td>
+                        <td>{course.instructor || '-'}</td>
+                        <td>{course.duration || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
@@ -615,32 +619,34 @@ export default function Home() {
             {loading ? (
               <div className="loading"></div>
             ) : (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Amount</th>
-                    <th>Description</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((tx) => (
-                    <tr key={tx.id}>
-                      <td>{tx.id}</td>
-                      <td>{tx.type}</td>
-                      <td>{tx.fromUserId || '-'}</td>
-                      <td>{tx.toUserId || '-'}</td>
-                      <td>${tx.amount}</td>
-                      <td>{tx.description || '-'}</td>
-                      <td>{new Date(tx.createdAt).toLocaleString()}</td>
+              <div style={{ maxHeight: '500px', overflowY: 'auto', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                <table className="table">
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                    <tr>
+                      <th>ID</th>
+                      <th>Type</th>
+                      <th>From</th>
+                      <th>To</th>
+                      <th>Amount</th>
+                      <th>Description</th>
+                      <th>Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {transactions.map((tx) => (
+                      <tr key={tx.id}>
+                        <td>{tx.id}</td>
+                        <td>{tx.type}</td>
+                        <td>{tx.fromUserId || '-'}</td>
+                        <td>{tx.toUserId || '-'}</td>
+                        <td>${tx.amount}</td>
+                        <td>{tx.description || '-'}</td>
+                        <td>{new Date(tx.createdAt).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
@@ -895,26 +901,28 @@ export default function Home() {
               {loading ? (
                 <div className="loading"></div>
               ) : (
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Amount</th>
-                      <th>Description</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myTransactions.slice(0, 5).map((tx) => (
-                      <tr key={tx.id}>
-                        <td>{tx.type}</td>
-                        <td>${tx.amount}</td>
-                        <td>{tx.description || '-'}</td>
-                        <td>{new Date(tx.createdAt).toLocaleString()}</td>
+                <div style={{ maxHeight: '400px', overflowY: 'auto', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                  <table className="table">
+                    <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                      <tr>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Date</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {myTransactions.slice(0, 5).map((tx) => (
+                        <tr key={tx.id}>
+                          <td>{tx.type}</td>
+                          <td>${tx.amount}</td>
+                          <td>{tx.description || '-'}</td>
+                          <td>{new Date(tx.createdAt).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
@@ -974,26 +982,28 @@ export default function Home() {
             {loading ? (
               <div className="loading"></div>
             ) : (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Description</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myTransactions.map((tx) => (
-                    <tr key={tx.id}>
-                      <td>{tx.type}</td>
-                      <td>${tx.amount}</td>
-                      <td>{tx.description || '-'}</td>
-                      <td>{new Date(tx.createdAt).toLocaleString()}</td>
+              <div style={{ maxHeight: '500px', overflowY: 'auto', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                <table className="table">
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                    <tr>
+                      <th>Type</th>
+                      <th>Amount</th>
+                      <th>Description</th>
+                      <th>Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {myTransactions.map((tx) => (
+                      <tr key={tx.id}>
+                        <td>{tx.type}</td>
+                        <td>${tx.amount}</td>
+                        <td>{tx.description || '-'}</td>
+                        <td>{new Date(tx.createdAt).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}

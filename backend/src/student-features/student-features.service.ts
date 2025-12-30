@@ -23,7 +23,14 @@ export class StudentFeaturesService {
   ) {}
 
   async getMyAccount(userId: number) {
-    const account = await this.accountService.getAccountByUserId(userId);
+    // Validate userId
+    const validUserId = typeof userId === 'number' ? userId : parseInt(String(userId), 10);
+    if (isNaN(validUserId) || validUserId <= 0) {
+      console.error('getMyAccount - Invalid userId:', userId, typeof userId);
+      throw new BadRequestException(`Invalid user ID: ${userId}`);
+    }
+    console.log('getMyAccount - userId:', validUserId);
+    const account = await this.accountService.getAccountByUserId(validUserId);
     return {
       balance: parseFloat(account.balance.toString()),
       currency: account.currency,
@@ -127,15 +134,30 @@ export class StudentFeaturesService {
   }
 
   async getMyTransactions(userId: number) {
-    return this.transactionService.getTransactionsByUserId(userId);
+    // Validate userId
+    const validUserId = typeof userId === 'number' ? userId : parseInt(String(userId), 10);
+    if (isNaN(validUserId) || validUserId <= 0) {
+      console.error('getMyTransactions - Invalid userId:', userId, typeof userId);
+      throw new BadRequestException(`Invalid user ID: ${userId}`);
+    }
+    console.log('getMyTransactions - userId:', validUserId);
+    return this.transactionService.getTransactionsByUserId(validUserId);
   }
 
   async getMyEnrollments(userId: number) {
-    return this.enrollmentService.getEnrollmentsByUserId(userId);
+    // Validate userId
+    const validUserId = typeof userId === 'number' ? userId : parseInt(String(userId), 10);
+    if (isNaN(validUserId) || validUserId <= 0) {
+      console.error('getMyEnrollments - Invalid userId:', userId, typeof userId);
+      throw new BadRequestException(`Invalid user ID: ${userId}`);
+    }
+    console.log('getMyEnrollments - userId:', validUserId);
+    return this.enrollmentService.getEnrollmentsByUserId(validUserId);
   }
 
   async getStudentsList(currentUserId: number) {
     try {
+      console.log('getStudentsList SERVICE - currentUserId:', currentUserId, typeof currentUserId);
       // Ensure currentUserId is a valid number
       const userId = typeof currentUserId === 'number' ? currentUserId : parseInt(String(currentUserId), 10);
       if (isNaN(userId) || userId <= 0) {
@@ -143,25 +165,30 @@ export class StudentFeaturesService {
         throw new BadRequestException(`Invalid user ID: ${currentUserId}`);
       }
 
-      console.log('getStudentsList - userId:', userId);
+      console.log('getStudentsList SERVICE - userId:', userId);
       const students = await this.userRepository.find({
         where: { role: Role.Student },
       });
-      console.log('getStudentsList - found students:', students.length);
+      console.log('getStudentsList SERVICE - found students:', students.length);
 
       // Filter out current user and return formatted list
-      return students
-        .filter(user => user.id !== userId)
-        .map(user => ({
-          id: user.id,
-          username: user.username,
-          email: user.email || null,
-          fullName: user.fullName || null,
-          studentId: user.studentId || null,
-          displayName: `${user.fullName || user.username} (${user.studentId || user.email || 'N/A'})`,
-        }));
+      const filtered = students.filter(user => {
+        console.log('Filtering - user.id:', user.id, 'userId:', userId, 'match:', user.id !== userId);
+        return user.id !== userId;
+      });
+      console.log('getStudentsList SERVICE - filtered count:', filtered.length);
+      
+      return filtered.map(user => ({
+        id: user.id,
+        username: user.username,
+        email: user.email || null,
+        fullName: user.fullName || null,
+        studentId: user.studentId || null,
+        displayName: `${user.fullName || user.username} (${user.studentId || user.email || 'N/A'})`,
+      }));
     } catch (error) {
       console.error('Error getting students list:', error);
+      console.error('Error stack:', error.stack);
       throw error;
     }
   }

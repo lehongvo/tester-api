@@ -28,13 +28,28 @@ export class TransactionService {
   }
 
   async getTransactionsByUserId(userId: number): Promise<Transaction[]> {
-    return this.transactionRepository.find({
-      where: [
-        { fromUserId: userId },
-        { toUserId: userId },
-      ],
-      order: { createdAt: 'DESC' },
-    });
+    // Validate userId
+    const validUserId = typeof userId === 'number' ? userId : parseInt(String(userId), 10);
+    if (isNaN(validUserId) || validUserId <= 0) {
+      console.error('getTransactionsByUserId - Invalid userId:', userId, typeof userId);
+      throw new Error(`Invalid user ID: ${userId}`);
+    }
+    console.log('getTransactionsByUserId - querying with userId:', validUserId);
+    try {
+      const transactions = await this.transactionRepository.find({
+        where: [
+          { fromUserId: validUserId },
+          { toUserId: validUserId },
+        ],
+        order: { createdAt: 'DESC' },
+      });
+      console.log('getTransactionsByUserId - found transactions:', transactions.length);
+      return transactions;
+    } catch (error) {
+      console.error('getTransactionsByUserId - Query error:', error);
+      console.error('getTransactionsByUserId - userId used in query:', validUserId, typeof validUserId);
+      throw error;
+    }
   }
 
   async getAllTransactions(): Promise<Transaction[]> {

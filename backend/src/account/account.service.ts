@@ -20,11 +20,21 @@ export class AccountService {
   }
 
   async getAccountByUserId(userId: number): Promise<Account> {
+    console.log('getAccountByUserId - userId:', userId, typeof userId);
+    // Validate userId
+    const validUserId = typeof userId === 'number' ? userId : parseInt(String(userId), 10);
+    console.log('getAccountByUserId - validUserId:', validUserId, typeof validUserId);
+    if (isNaN(validUserId) || validUserId <= 0) {
+      console.error('getAccountByUserId - Invalid userId:', userId, 'validUserId:', validUserId);
+      throw new NotFoundException(`Invalid user ID: ${userId}`);
+    }
+    
+    console.log('getAccountByUserId - querying with userId:', validUserId);
     const account = await this.accountRepository.findOne({
-      where: { userId },
+      where: { userId: validUserId },
     });
     if (!account) {
-      throw new NotFoundException(`Account not found for user ${userId}`);
+      throw new NotFoundException(`Account not found for user ${validUserId}`);
     }
     return account;
   }
