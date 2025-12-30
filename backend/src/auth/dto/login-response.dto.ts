@@ -14,6 +14,14 @@ export class UserResponseDto {
     type: String,
   })
   username: string;
+
+  @ApiProperty({
+    description: 'User role',
+    example: 'admin',
+    enum: ['admin', 'student'],
+    type: String,
+  })
+  role: string;
 }
 
 export class LoginResponseDto {

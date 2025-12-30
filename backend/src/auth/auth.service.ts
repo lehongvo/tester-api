@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { LoginDto } from './dto/login.dto';
+import { Role } from './entities/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -30,18 +31,37 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const payload = { username: user.username, sub: user.id };
+    const payload = { 
+      username: user.username, 
+      sub: user.id,
+      role: user.role,
+    };
     return {
       access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
         username: user.username,
+        role: user.role,
       },
     };
   }
 
   async logout() {
     return { message: 'Logged out successfully' };
+  }
+
+  async getMe(userId: number) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      email: user.email,
+      fullName: user.fullName,
+    };
   }
 
   private async initializeDefaultUser() {
@@ -53,9 +73,19 @@ export class AuthService {
       const user = this.userRepository.create({
         username: 'admin',
         password: hashedPassword,
+        role: Role.Admin,
+        email: 'admin@school.edu',
+        fullName: 'System Administrator',
       });
       await this.userRepository.save(user);
-      console.log('Default user created: admin/admin123');
+      console.log('Default admin user created: admin/admin123');
+    } else {
+      // Always ensure admin has admin role
+      if (existingUser.role !== Role.Admin) {
+        existingUser.role = Role.Admin;
+        await this.userRepository.save(existingUser);
+        console.log('Updated existing admin user with admin role');
+      }
     }
   }
 }

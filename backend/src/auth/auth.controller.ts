@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -117,6 +117,36 @@ This endpoint logs out the current user. Requires a valid JWT access token in th
   })
   async logout(@Request() req) {
     return this.authService.logout();
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ 
+    summary: '👤 Get Current User Info',
+    description: `
+**Get current authenticated user information**
+
+This endpoint returns the current user's information based on the JWT token. Useful for refreshing user data.
+    `
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: '✅ User information retrieved',
+    schema: {
+      example: {
+        id: 1,
+        username: 'admin',
+        role: 'admin'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: '❌ Unauthorized - Invalid or missing JWT token',
+  })
+  async getMe(@Request() req) {
+    return this.authService.getMe(req.user.userId);
   }
 }
 

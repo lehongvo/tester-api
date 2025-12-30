@@ -15,22 +15,37 @@ async function bootstrap() {
   });
   
   // Enable validation
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true, // Strip properties that don't have decorators
+    forbidNonWhitelisted: false, // Don't throw error for unknown properties
+    transform: true, // Automatically transform payloads to DTO instances
+  }));
   
   // Swagger Configuration
   const config = new DocumentBuilder()
-    .setTitle('Student Management API')
+    .setTitle('School Banking System API')
     .setDescription(`
-# Student Management System API Documentation
+# School Banking System API Documentation
 
-## Authentication
+## 🎯 Overview
+
+This is a comprehensive banking system for schools with role-based access control (Admin & Student).
+
+### Key Features:
+- **Role-based Authentication**: Admin and Student roles with different permissions
+- **Account Management**: Each student has an account with balance (USD)
+- **Money Transfer**: Students can transfer money to each other
+- **Course Management**: Admin manages courses, students can purchase courses
+- **Transaction History**: Complete audit trail of all financial transactions
+
+## 🔐 Authentication
 
 This API uses JWT (JSON Web Token) for authentication.
 
 ### How to use:
 
 1. **Login** - Call \`POST /auth/login\` with username and password
-2. **Get Access Token** - Response will include \`access_token\` field
+2. **Get Access Token** - Response will include \`access_token\` and \`user\` (with role)
 3. **Use Token** - Include token in Authorization header for protected endpoints:
    \`\`\`
    Authorization: Bearer {access_token}
@@ -50,25 +65,56 @@ Response:
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
-    "username": "admin"
+    "username": "admin",
+    "role": "admin"
   }
 }
 \`\`\`
 
-### Using the token:
-\`\`\`
-GET /students
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-\`\`\`
+## 👥 Roles & Permissions
+
+### Admin Role
+- Create student user accounts (with initial 10,000 USD balance)
+- Set/adjust student account balance
+- Manage courses (CRUD)
+- View all transactions
+
+### Student Role
+- View own account balance
+- Transfer money to other students
+- Purchase courses using balance
+- View own transaction history
+- View enrolled courses
+
+## 💰 Account System
+
+- Each student receives **10,000 USD** when account is created
+- Balance is stored in USD currency
+- All transactions are logged with type (transfer/payment/adjustment)
+
+## 📚 Course System
+
+- Admin can create courses with price
+- Students can purchase courses using account balance
+- Enrollment is tracked with payment status
+
+## 📊 Transaction Types
+
+- **transfer**: Student to student money transfer
+- **payment**: Course purchase payment
+- **adjustment**: Admin balance adjustment
 
 ## Default Credentials
-- Username: \`admin\`
-- Password: \`admin123\`
+- **Admin**: Username: \`admin\`, Password: \`admin123\`
+- **Student**: Created by admin, receives temporary password
     `)
-    .setVersion('1.0')
+    .setVersion('2.0')
     .setContact('API Support', '', 'support@example.com')
     .addTag('auth', '🔐 Authentication - Login and Logout endpoints')
-    .addTag('students', '👥 Students - CRUD operations for student management')
+    .addTag('admin', '👨‍💼 Admin - Admin-only operations (create students, set balance, manage courses)')
+    .addTag('students', '👥 Students - CRUD operations for student entity management')
+    .addTag('courses', '📚 Courses - Course management and purchase')
+    .addTag('student-features', '🎓 Student Features - Balance, transfer, purchase, history')
     .addBearerAuth(
       {
         type: 'http',

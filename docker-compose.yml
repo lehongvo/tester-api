@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: tester_db
     ports:
-      - "5432:5432"
+      - "0.0.0.0:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -26,9 +26,8 @@ services:
       DB_PASSWORD: postgres
       DB_NAME: tester_db
       JWT_SECRET: your-secret-key-change-in-production
-      FRONTEND_URL: http://192.168.1.4:3000
     ports:
-      - "3001:3001"
+      - "0.0.0.0:3001:3001"
     depends_on:
       - postgres
     networks:
@@ -43,9 +42,9 @@ services:
       dockerfile: Dockerfile
     container_name: tester_frontend
     environment:
-      NEXT_PUBLIC_API_URL: http://192.168.1.4:3001
+      NEXT_PUBLIC_API_URL: http://192.168.1.6:3001
     ports:
-      - "3000:3000"
+      - "0.0.0.0:3000:3000"
     depends_on:
       - backend
     networks:
@@ -61,4 +60,3 @@ volumes:
 networks:
   tester_network:
     driver: bridge
-
