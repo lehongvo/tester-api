@@ -78,6 +78,7 @@ export default function Home() {
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [showBuyCourseModal, setShowBuyCourseModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'courses' | 'history'>('dashboard')
+  const [balanceVisible, setBalanceVisible] = useState(true)
   
   // Form states
   const [createStudentForm, setCreateStudentForm] = useState({
@@ -511,18 +512,37 @@ export default function Home() {
       <div className="container">
         {error && <div className="error">{error}</div>}
         
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+          {/* Quick Stats Cards - Banking Style */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '40px' }}>
             <div className="stat-card primary">
-              <h3>👥 Total Students</h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>
+                  👥
+                </div>
+                <div style={{ fontSize: '14px', color: '#999', fontWeight: '500' }}>Students</div>
+              </div>
               <p className="stat-number">{students.length}</p>
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>Active accounts</div>
             </div>
             <div className="stat-card success">
-              <h3>📚 Total Courses</h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>
+                  📚
+                </div>
+                <div style={{ fontSize: '14px', color: '#999', fontWeight: '500' }}>Courses</div>
+              </div>
               <p className="stat-number">{courses.length}</p>
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>Available courses</div>
             </div>
             <div className="stat-card warning">
-              <h3>💳 Total Transactions</h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>
+                  💳
+                </div>
+                <div style={{ fontSize: '14px', color: '#999', fontWeight: '500' }}>Transactions</div>
+              </div>
               <p className="stat-number">{transactions.length}</p>
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>All time</div>
             </div>
           </div>
 
