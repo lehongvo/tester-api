@@ -32,9 +32,7 @@ services:
       - postgres
     networks:
       - tester_network
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+
 
   frontend:
     build:
