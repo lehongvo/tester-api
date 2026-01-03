@@ -87,6 +87,7 @@ export class AdminService {
 
     // Create student entity
     const student = this.studentRepository.create({
+      userId: savedUser.id,
       name: createDto.fullName, // Use fullName for student entity name
       email: createDto.email,
       age: createDto.age,
@@ -175,7 +176,7 @@ export class AdminService {
         try {
           const account = await this.accountService.getAccountByUserId(user.id);
           const studentEntity = await this.studentRepository.findOne({
-            where: { email: user.email },
+            where: { userId: user.id },
           });
           return {
             user: {

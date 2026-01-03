@@ -1,31 +1,35 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
-  ApiParam,
   ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
-import { StudentService } from './student.service';
-import { CreateStudentDto } from './dto/create-student.dto';
-import { UpdateStudentDto } from './dto/update-student.dto';
-import { StudentResponseDto } from './dto/student-response.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '../auth/entities/role.enum';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { CreateStudentDto } from './dto/create-student.dto';
+import { StudentResponseDto } from './dto/student-response.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
+import { StudentService } from './student.service';
 
 @ApiTags('students')
 @ApiBearerAuth('JWT-auth')
 @Controller('students')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class StudentController {
   /**
    * ⚠️ All endpoints in this controller require JWT authentication.
@@ -41,10 +45,15 @@ export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
   @Post()
+  @Roles(Role.Admin)
   @ApiOperation({
-    summary: '➕ Create New Student',
+    summary: '➕ Create New Student (Admin only)',
     description: `
 **Create a new student record**
+
+**Access Rules:**
+- **Admin**: ✅ Allowed
+- **Student**: ❌ Forbidden (403)
 
 **Required:** JWT Access Token (click 🔒 Authorize button above)
 
@@ -81,19 +90,28 @@ export class StudentController {
     status: 401,
     description: 'Unauthorized - Invalid or missing JWT token',
   })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
   create(@Body() createStudentDto: CreateStudentDto) {
     return this.studentService.create(createStudentDto);
   }
 
   @Get()
   @ApiOperation({
-    summary: '📋 Get All Students',
+    summary: '📋 Get Students (Admin: all | Student: self)',
     description: `
-**Retrieve a list of all students**
+**Retrieve students**
+
+**Access Rules:**
+- **Admin**: returns **all** students
+- **Student**: returns **only your own** student record
 
 **Required:** JWT Access Token (click 🔒 Authorize button above)
 
-Returns an array of all student records in the system.
+- **Admin**: Returns an array of **all** student records in the system.
+- **Student**: Returns an array containing **only your own** student record.
     `,
   })
   @ApiResponse({
@@ -105,20 +123,35 @@ Returns an array of all student records in the system.
     status: 401,
     description: 'Unauthorized - Invalid or missing JWT token',
   })
-  findAll() {
-    return this.studentService.findAll();
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - You can only view your own account (or admin required)',
+  })
+  findAll(@Req() req: any) {
+    return this.studentService.findAllByRequester({
+      userId: req.user.userId,
+      role: req.user.role,
+    });
   }
 
   @Get(':id')
   @ApiOperation({
-    summary: '🔍 Get Student by ID',
+    summary: '🔍 Get Student by ID (Admin:any | Student:self)',
     description: `
-**Retrieve detailed information about a specific student**
+**Retrieve a student by ID**
+
+**Access Rules:**
+- **Admin**: ✅ can fetch any student by ID
+- **Student**: ✅ can only fetch **your own** student record (otherwise 403)
 
 **Required:** JWT Access Token (click 🔒 Authorize button above)
 
 **Parameters:**
 - \`id\` (path parameter): Student ID (number)
+
+**Access Rules:**
+- **Admin**: Can fetch any student by ID
+- **Student**: Can only fetch **your own** student record
 
 **Example:** \`GET /students/1\`
     `,
@@ -142,20 +175,35 @@ Returns an array of all student records in the system.
     status: 401,
     description: 'Unauthorized - Invalid or missing JWT token',
   })
-  findOne(@Param('id') id: string) {
-    return this.studentService.findOne(+id);
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - You can only view your own account (or admin required)',
+  })
+  findOne(@Param('id') id: string, @Req() req: any) {
+    return this.studentService.findOneByRequester(+id, {
+      userId: req.user.userId,
+      role: req.user.role,
+    });
   }
 
   @Patch(':id')
   @ApiOperation({
-    summary: '✏️ Update Student',
+    summary: '✏️ Update Student (Admin:any | Student:self)',
     description: `
 **Update student information**
+
+**Access Rules:**
+- **Admin**: ✅ can update any student
+- **Student**: ✅ can only update **your own** student record (otherwise 403)
 
 **Required:** JWT Access Token (click 🔒 Authorize button above)
 
 **Parameters:**
 - \`id\` (path parameter): Student ID to update
+
+**Access Rules:**
+- **Admin**: Can update any student
+- **Student**: Can only update **your own** student record
 
 **Note:** Only provided fields will be updated. Fields not included in request will remain unchanged.
 
@@ -192,22 +240,43 @@ Returns an array of all student records in the system.
     status: 401,
     description: 'Unauthorized - Invalid or missing JWT token',
   })
-  update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto) {
-    return this.studentService.update(+id, updateStudentDto);
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - You can only modify your own account (or admin required)',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateStudentDto: UpdateStudentDto,
+    @Req() req: any,
+  ) {
+    return this.studentService.updateByRequester(+id, updateStudentDto, {
+      userId: req.user.userId,
+      role: req.user.role,
+    });
   }
 
   @Delete(':id')
   @ApiOperation({
-    summary: '🗑️ Delete Student',
+    summary: '🗑️ Delete Student (Admin:any | Student:self)',
     description: `
-**Permanently delete a student record**
+**Delete a student record / account**
+
+**Access Rules:**
+- **Admin**: ✅ can delete any student record
+- **Student**: ✅ can only delete **your own** account (otherwise 403)
 
 **Required:** JWT Access Token (click 🔒 Authorize button above)
 
 **Parameters:**
 - \`id\` (path parameter): Student ID to delete
 
-**⚠️ Warning:** This action cannot be undone. The student record will be permanently deleted.
+**Access Rules:**
+- **Admin**: Can delete any student record
+- **Student**: Can only delete **your own** account
+
+**⚠️ Warning:** This action cannot be undone.
+- If **Admin** deletes: only the students record is removed.
+- If **Student** deletes self: the corresponding users account is deleted (and students will be removed by cascade).
 
 **Example:** \`DELETE /students/1\`
     `,
@@ -235,8 +304,15 @@ Returns an array of all student records in the system.
     status: 401,
     description: 'Unauthorized - Invalid or missing JWT token',
   })
-  remove(@Param('id') id: string) {
-    return this.studentService.remove(+id);
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - You can only modify your own account (or admin required)',
+  })
+  remove(@Param('id') id: string, @Req() req: any) {
+    return this.studentService.removeByRequester(+id, {
+      userId: req.user.userId,
+      role: req.user.role,
+    });
   }
 }
 
