@@ -42,5 +42,11 @@ coverage/
 # Misc
 *.tsbuildinfo
 
-
-
+# JMeter and JDK (download separately, don't commit)
+jmaster/apache-jmeter-*/
+jmaster/*.tgz
+jmaster/*.tar.gz
+jmaster/jdk-*/
+jmaster/*.jdk/
+jmaster/openjdk-*/
+jmaster/jmeter.log
