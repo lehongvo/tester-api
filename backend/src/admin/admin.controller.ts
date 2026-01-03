@@ -1,26 +1,27 @@
 import {
+  Body,
   Controller,
+  Get,
+  Param,
   Post,
   Put,
-  Get,
-  Body,
-  Param,
   UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
+  ApiOperation,
   ApiParam,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../auth/entities/role.enum';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { AdminService } from './admin.service';
 import { CreateStudentUserDto } from './dto/create-student-user.dto';
 import { SetBalanceDto } from './dto/set-balance.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth('JWT-auth')
@@ -28,7 +29,7 @@ import { SetBalanceDto } from './dto/set-balance.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService) { }
 
   @Post('students')
   @ApiOperation({
@@ -72,17 +73,17 @@ export class AdminController {
   @ApiOperation({
     summary: '💰 Set Student Balance (Admin Only)',
     description: `
-**Set or adjust student account balance**
+    **Set or adjust student account balance**
 
-**Required:** Admin role + JWT Access Token
+    **Required:** Admin role + JWT Access Token
 
-**Parameters:**
-- \`id\` (path parameter): User ID of the student
+    **Parameters:**
+    - \`id\` (path parameter): User ID of the student
 
-**Features:**
-- Sets absolute balance amount
-- Logs adjustment transaction
-- Returns old balance, new balance, and difference
+    **Features:**
+    - Sets absolute balance amount
+    - Logs adjustment transaction
+    - Returns old balance, new balance, and difference
     `,
   })
   @ApiParam({
@@ -112,6 +113,45 @@ export class AdminController {
     @Body() setBalanceDto: SetBalanceDto,
   ) {
     return this.adminService.setStudentBalance(+id, setBalanceDto);
+  }
+
+  @Put('students/:id')
+  @ApiOperation({
+    summary: '✏️ Update Student Information (Admin Only)',
+    description: `
+    **Update student profile details**
+
+    **Required:** Admin role + JWT Access Token
+
+    **Parameters:**
+    - \`id\` (path parameter): User ID of the student
+
+    **Updates:**
+    - Full Name
+    - Email
+    - Age
+    - Address
+    `,
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'User ID of the student',
+    type: Number,
+    example: 5,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Student updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
+  async updateStudent(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateStudentDto,
+  ) {
+    return this.adminService.updateStudent(+id, updateDto);
   }
 
   @Get('transactions')

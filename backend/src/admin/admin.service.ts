@@ -22,7 +22,7 @@ export class AdminService {
     private accountService: AccountService,
     private transactionService: TransactionService,
     private voucherService: VoucherService,
-  ) {}
+  ) { }
 
   async createStudentUser(createDto: CreateStudentUserDto) {
     // Check if username or email already exists
@@ -44,7 +44,7 @@ export class AdminService {
         where: { role: Role.Student },
         order: { studentId: 'DESC' },
       });
-      
+
       let nextNumber = 1;
       if (allStudents.length > 0) {
         // Extract number from existing student IDs (format: SV001, SV002, etc.)
@@ -53,14 +53,14 @@ export class AdminService {
           .filter(id => id && id.match(/^SV\d+$/))
           .map(id => parseInt(id.replace('SV', '')))
           .filter(n => !isNaN(n));
-        
+
         if (numbers.length > 0) {
           nextNumber = Math.max(...numbers) + 1;
         } else {
           nextNumber = allStudents.length + 1;
         }
       }
-      
+
       studentId = `SV${String(nextNumber).padStart(3, '0')}`;
     } else {
       // Check if provided studentId already exists
@@ -248,6 +248,47 @@ export class AdminService {
         username: admin.username,
         role: admin.role,
       },
+    };
+  }
+
+  async updateStudent(userId: number, updateDto: any) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    if (user.role !== Role.Student) {
+      throw new Error('Can only update student users');
+    }
+
+    // Update User entity
+    if (updateDto.fullName) user.fullName = updateDto.fullName;
+    if (updateDto.email) user.email = updateDto.email;
+    await this.userRepository.save(user);
+
+    // Update Student entity
+    let student = await this.studentRepository.findOne({ where: { userId: user.id } });
+    if (!student) {
+      // Create if missing (shouldn't happen for valid students)
+      student = this.studentRepository.create({ userId: user.id });
+    }
+
+    if (updateDto.fullName) student.name = updateDto.fullName;
+    if (updateDto.email) student.email = updateDto.email;
+    if (updateDto.age !== undefined) student.age = updateDto.age;
+    if (updateDto.address !== undefined) student.address = updateDto.address;
+
+    const savedStudent = await this.studentRepository.save(student);
+
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        studentId: user.studentId,
+        role: user.role,
+      },
+      student: savedStudent,
     };
   }
 

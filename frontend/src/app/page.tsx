@@ -129,6 +129,14 @@ export default function Home() {
     age: '',
     address: '',
   })
+  const [showEditStudentModal, setShowEditStudentModal] = useState(false)
+  const [editingStudent, setEditingStudent] = useState<any>(null)
+  const [editStudentForm, setEditStudentForm] = useState({
+    fullName: '',
+    email: '',
+    age: '',
+    address: '',
+  })
   const [setBalanceForm, setSetBalanceForm] = useState({
     balance: '',
     description: '',
@@ -140,6 +148,7 @@ export default function Home() {
   })
   const [studentsList, setStudentsList] = useState<any[]>([])
   const [studentSearch, setStudentSearch] = useState('')
+  const [enrollmentSearch, setEnrollmentSearch] = useState('')
   const [createCourseForm, setCreateCourseForm] = useState({
     name: '',
     price: '',
@@ -615,6 +624,36 @@ export default function Home() {
     }
   }
 
+  const updateStudent = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingStudent) return
+    setError('')
+    try {
+      await axios.put(
+        `${API_URL}/admin/students/${editingStudent.user.id}`,
+        {
+          fullName: editStudentForm.fullName,
+          email: editStudentForm.email,
+          age: editStudentForm.age ? parseInt(editStudentForm.age) : undefined,
+          address: editStudentForm.address,
+        },
+        { headers: getAuthHeaders() }
+      )
+      setShowEditStudentModal(false)
+      setEditingStudent(null)
+      setNotification({
+        show: true,
+        type: 'success',
+        title: '✅ Student Updated',
+        message: 'Student information has been updated successfully.',
+      })
+      setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 4000)
+      fetchAdminData()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update student')
+    }
+  }
+
   const deleteCourse = async () => {
     if (!editingCourse) return
     setError('')
@@ -1047,6 +1086,23 @@ export default function Home() {
                               <div className="admin-row-actions" style={{ opacity: 1 }}>
                                 <button
                                   className="admin-row-action admin-row-action--edit"
+                                  title="Edit Student"
+                                  onClick={() => {
+                                    setEditingStudent(student)
+                                    setEditStudentForm({
+                                      fullName: student.name,
+                                      email: student.email,
+                                      age: student.age ? String(student.age) : '',
+                                      address: student.address || '',
+                                    })
+                                    setShowEditStudentModal(true)
+                                  }}
+                                  style={{ marginRight: '8px' }}
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  className="admin-row-action admin-row-action--edit"
                                   title="Set Balance"
                                   onClick={() => {
                                     setSelectedStudentId(student.userId || student.id)
@@ -1249,467 +1305,542 @@ export default function Home() {
               </div>
             )}
           </div>
-        </main>
+        </main >
 
         {/* Create Student Modal */}
-        {showCreateStudentModal && (
-          <div className="modal" onClick={() => setShowCreateStudentModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>➕ Create Student User</h2>
-                <button className="close-btn" onClick={() => setShowCreateStudentModal(false)}>×</button>
-              </div>
-              <form onSubmit={createStudentUser}>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Username <span>*</span></label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={createStudentForm.username}
-                    onChange={(e) => setCreateStudentForm({ ...createStudentForm, username: e.target.value })}
-                    required
-                  />
+        {
+          showCreateStudentModal && (
+            <div className="modal" onClick={() => setShowCreateStudentModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>➕ Create Student User</h2>
+                  <button className="close-btn" onClick={() => setShowCreateStudentModal(false)}>×</button>
                 </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Email <span>*</span></label>
-                  <input
-                    type="email"
-                    className="admin-form-input"
-                    value={createStudentForm.email}
-                    onChange={(e) => setCreateStudentForm({ ...createStudentForm, email: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Full Name <span>*</span></label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={createStudentForm.fullName}
-                    onChange={(e) => setCreateStudentForm({ ...createStudentForm, fullName: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Password (optional - auto-generated if empty)</label>
-                  <input
-                    type="password"
-                    className="admin-form-input"
-                    value={createStudentForm.password}
-                    onChange={(e) => setCreateStudentForm({ ...createStudentForm, password: e.target.value })}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <form onSubmit={createStudentUser}>
                   <div className="admin-form-group">
-                    <label className="admin-form-label">Age</label>
-                    <input
-                      type="number"
-                      className="admin-form-input"
-                      value={createStudentForm.age}
-                      onChange={(e) => setCreateStudentForm({ ...createStudentForm, age: e.target.value })}
-                    />
-                  </div>
-                  <div className="admin-form-group">
-                    <label className="admin-form-label">Address</label>
+                    <label className="admin-form-label">Username <span>*</span></label>
                     <input
                       type="text"
                       className="admin-form-input"
-                      value={createStudentForm.address}
-                      onChange={(e) => setCreateStudentForm({ ...createStudentForm, address: e.target.value })}
+                      value={createStudentForm.username}
+                      onChange={(e) => setCreateStudentForm({ ...createStudentForm, username: e.target.value })}
+                      required
                     />
                   </div>
-                </div>
-                {error && <div className="error">{error}</div>}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                  <button type="submit" className="admin-btn admin-btn--primary">Create Student</button>
-                  <button type="button" onClick={() => setShowCreateStudentModal(false)} className="admin-btn admin-btn--secondary">Cancel</button>
-                </div>
-              </form>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Email <span>*</span></label>
+                    <input
+                      type="email"
+                      className="admin-form-input"
+                      value={createStudentForm.email}
+                      onChange={(e) => setCreateStudentForm({ ...createStudentForm, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Full Name <span>*</span></label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={createStudentForm.fullName}
+                      onChange={(e) => setCreateStudentForm({ ...createStudentForm, fullName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Password (optional - auto-generated if empty)</label>
+                    <input
+                      type="password"
+                      className="admin-form-input"
+                      value={createStudentForm.password}
+                      onChange={(e) => setCreateStudentForm({ ...createStudentForm, password: e.target.value })}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Age</label>
+                      <input
+                        type="number"
+                        className="admin-form-input"
+                        value={createStudentForm.age}
+                        onChange={(e) => setCreateStudentForm({ ...createStudentForm, age: e.target.value })}
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Address</label>
+                      <input
+                        type="text"
+                        className="admin-form-input"
+                        value={createStudentForm.address}
+                        onChange={(e) => setCreateStudentForm({ ...createStudentForm, address: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  {error && <div className="error">{error}</div>}
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <button type="submit" className="admin-btn admin-btn--primary">Create Student</button>
+                    <button type="button" onClick={() => setShowCreateStudentModal(false)} className="admin-btn admin-btn--secondary">Cancel</button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
+
+        {/* Edit Student Modal */}
+        {
+          showEditStudentModal && editingStudent && (
+            <div className="modal" onClick={() => setShowEditStudentModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>✏️ Edit Student</h2>
+                  <button className="close-btn" onClick={() => setShowEditStudentModal(false)}>×</button>
+                </div>
+                <form onSubmit={updateStudent}>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Full Name <span>*</span></label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={editStudentForm.fullName}
+                      onChange={(e) => setEditStudentForm({ ...editStudentForm, fullName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Email <span>*</span></label>
+                    <input
+                      type="email"
+                      className="admin-form-input"
+                      value={editStudentForm.email}
+                      onChange={(e) => setEditStudentForm({ ...editStudentForm, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Age</label>
+                      <input
+                        type="number"
+                        className="admin-form-input"
+                        value={editStudentForm.age}
+                        onChange={(e) => setEditStudentForm({ ...editStudentForm, age: e.target.value })}
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label className="admin-form-label">Address</label>
+                      <input
+                        type="text"
+                        className="admin-form-input"
+                        value={editStudentForm.address}
+                        onChange={(e) => setEditStudentForm({ ...editStudentForm, address: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  {error && <div className="error">{error}</div>}
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <button type="submit" className="admin-btn admin-btn--primary">Update Student</button>
+                    <button type="button" onClick={() => setShowEditStudentModal(false)} className="admin-btn admin-btn--secondary">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )
+        }
 
         {/* Set Balance Modal */}
-        {showSetBalanceModal && (
-          <div className="modal" onClick={() => setShowSetBalanceModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>💰 Set Student Balance</h2>
-                <button className="close-btn" onClick={() => setShowSetBalanceModal(false)}>×</button>
+        {
+          showSetBalanceModal && (
+            <div className="modal" onClick={() => setShowSetBalanceModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>💰 Set Student Balance</h2>
+                  <button className="close-btn" onClick={() => setShowSetBalanceModal(false)}>×</button>
+                </div>
+                <form onSubmit={setStudentBalance}>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">New Balance (USD) <span>*</span></label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="admin-form-input"
+                      value={setBalanceForm.balance}
+                      onChange={(e) => setSetBalanceForm({ ...setBalanceForm, balance: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Description</label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={setBalanceForm.description}
+                      onChange={(e) => setSetBalanceForm({ ...setBalanceForm, description: e.target.value })}
+                    />
+                  </div>
+                  {error && <div className="error">{error}</div>}
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <button type="submit" className="admin-btn admin-btn--primary">Set Balance</button>
+                    <button type="button" onClick={() => setShowSetBalanceModal(false)} className="admin-btn admin-btn--secondary">Cancel</button>
+                  </div>
+                </form>
               </div>
-              <form onSubmit={setStudentBalance}>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">New Balance (USD) <span>*</span></label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="admin-form-input"
-                    value={setBalanceForm.balance}
-                    onChange={(e) => setSetBalanceForm({ ...setBalanceForm, balance: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Description</label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={setBalanceForm.description}
-                    onChange={(e) => setSetBalanceForm({ ...setBalanceForm, description: e.target.value })}
-                  />
-                </div>
-                {error && <div className="error">{error}</div>}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                  <button type="submit" className="admin-btn admin-btn--primary">Set Balance</button>
-                  <button type="button" onClick={() => setShowSetBalanceModal(false)} className="admin-btn admin-btn--secondary">Cancel</button>
-                </div>
-              </form>
             </div>
-          </div>
-        )}
+          )
+        }
 
         {/* Edit Course Modal */}
-        {showEditCourseModal && editingCourse && (
-          <div className="modal" onClick={() => setShowEditCourseModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>✏️ Edit Course</h2>
-                <button className="close-btn" onClick={() => setShowEditCourseModal(false)}>×</button>
-              </div>
-              <form onSubmit={saveCourseEdits}>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Course Name <span>*</span></label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={editCourseForm.name}
-                    onChange={(e) => setEditCourseForm({ ...editCourseForm, name: e.target.value })}
-                    required
-                  />
+        {
+          showEditCourseModal && editingCourse && (
+            <div className="modal" onClick={() => setShowEditCourseModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>✏️ Edit Course</h2>
+                  <button className="close-btn" onClick={() => setShowEditCourseModal(false)}>×</button>
                 </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Price (USD) <span>*</span></label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="admin-form-input"
-                    value={editCourseForm.price}
-                    onChange={(e) => setEditCourseForm({ ...editCourseForm, price: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Description</label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={editCourseForm.description}
-                    onChange={(e) => setEditCourseForm({ ...editCourseForm, description: e.target.value })}
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Instructor</label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={editCourseForm.instructor}
-                    onChange={(e) => setEditCourseForm({ ...editCourseForm, instructor: e.target.value })}
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Duration</label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={editCourseForm.duration}
-                    onChange={(e) => setEditCourseForm({ ...editCourseForm, duration: e.target.value })}
-                  />
-                </div>
-                {error && <div className="error">{error}</div>}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                  <button type="submit" className="admin-btn admin-btn--primary">Save</button>
-                  <button type="button" onClick={() => setShowEditCourseModal(false)} className="admin-btn admin-btn--secondary">Cancel</button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setConfirmModal({
-                        show: true,
-                        title: '🗑️ Delete Course',
-                        message: `Are you sure you want to delete "${editingCourse?.name}"?`,
-                        onConfirm: async () => {
-                          setConfirmModal({ ...confirmModal, show: false })
-                          await deleteCourse()
-                        },
-                      })
-                    }}
-                    className="admin-btn admin-btn--danger"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Create Course Modal */}
-        {showCreateCourseModal && (
-          <div className="modal" onClick={() => setShowCreateCourseModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>📝 Create Course</h2>
-                <button className="close-btn" onClick={() => setShowCreateCourseModal(false)}>×</button>
-              </div>
-              <form onSubmit={createCourse}>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Course Name <span>*</span></label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={createCourseForm.name}
-                    onChange={(e) => setCreateCourseForm({ ...createCourseForm, name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Price (USD) <span>*</span></label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="admin-form-input"
-                    value={createCourseForm.price}
-                    onChange={(e) => setCreateCourseForm({ ...createCourseForm, price: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Description</label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={createCourseForm.description}
-                    onChange={(e) => setCreateCourseForm({ ...createCourseForm, description: e.target.value })}
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Instructor</label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={createCourseForm.instructor}
-                    onChange={(e) => setCreateCourseForm({ ...createCourseForm, instructor: e.target.value })}
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Duration</label>
-                  <input
-                    type="text"
-                    className="admin-form-input"
-                    value={createCourseForm.duration}
-                    onChange={(e) => setCreateCourseForm({ ...createCourseForm, duration: e.target.value })}
-                  />
-                </div>
-                {error && <div className="error">{error}</div>}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                  <button type="submit" className="admin-btn admin-btn--primary">Create</button>
-                  <button type="button" onClick={() => setShowCreateCourseModal(false)} className="admin-btn admin-btn--secondary">Cancel</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Notification Toast */}
-        {notification.show && (
-          <div className={`notification notification-${notification.type}`}>
-            <div className="notification-content">
-              <div className="notification-icon">
-                {notification.type === 'success' && '✅'}
-                {notification.type === 'error' && '❌'}
-                {notification.type === 'info' && 'ℹ️'}
-                {notification.type === 'warning' && '⚠️'}
-              </div>
-              <div className="notification-text">
-                <div className="notification-title">{notification.title}</div>
-                <div className="notification-message">{notification.message}</div>
-                {notification.tempPassword && (
-                  <div className="notification-password">
-                    <strong>🔑 Temporary Password:</strong>
-                    <code style={{
-                      background: 'rgba(0,0,0,0.1)',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      marginLeft: '8px',
-                      fontFamily: 'monospace',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      color: '#4f46e5'
-                    }}>
-                      {notification.tempPassword}
-                    </code>
+                <form onSubmit={saveCourseEdits}>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Course Name <span>*</span></label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={editCourseForm.name}
+                      onChange={(e) => setEditCourseForm({ ...editCourseForm, name: e.target.value })}
+                      required
+                    />
                   </div>
-                )}
-              </div>
-              <button
-                className="notification-close"
-                onClick={() => setNotification({ ...notification, show: false })}
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* User Info Modal */}
-        {showUserInfo && (
-          <div className="modal" onClick={() => { setShowUserInfo(false); setIsEditingProfile(false) }}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
-              <div className="modal-header">
-                <h2>👤 Account Info</h2>
-                <button className="close-btn" onClick={() => setShowUserInfo(false)}>×</button>
-              </div>
-
-              {userInfoLoading ? (
-                <div className="loading" style={{ margin: '18px 0' }} />
-              ) : (
-                <div style={{ display: 'grid', gap: '12px', paddingTop: '6px' }}>
-                  <div className="card" style={{ padding: '16px' }}>
-                    <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Signed in</div>
-                    <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '6px' }}>{userInfo?.username || user?.username}</div>
-                    <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                      <span className="chip chip-primary">Role: {userInfo?.role || user?.role}</span>
-                      {userInfo?.id && <span className="chip chip-muted">User ID: {userInfo.id}</span>}
-                    </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Price (USD) <span>*</span></label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="admin-form-input"
+                      value={editCourseForm.price}
+                      onChange={(e) => setEditCourseForm({ ...editCourseForm, price: e.target.value })}
+                      required
+                    />
                   </div>
-
-                  <div className="card" style={{ padding: '16px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700 }}>Email</div>
-                        <div style={{ marginTop: '6px', fontWeight: 700, color: '#111827' }}>{userInfo?.email || '—'}</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700 }}>Student ID</div>
-                        <div style={{ marginTop: '6px', fontWeight: 700, color: '#111827' }}>{userInfo?.studentId || '—'}</div>
-                      </div>
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700 }}>Full name</div>
-                        <div style={{ marginTop: '6px', fontWeight: 700, color: '#111827' }}>{userInfo?.fullName || '—'}</div>
-                      </div>
-                    </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Description</label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={editCourseForm.description}
+                      onChange={(e) => setEditCourseForm({ ...editCourseForm, description: e.target.value })}
+                    />
                   </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Instructor</label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={editCourseForm.instructor}
+                      onChange={(e) => setEditCourseForm({ ...editCourseForm, instructor: e.target.value })}
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Duration</label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={editCourseForm.duration}
+                      onChange={(e) => setEditCourseForm({ ...editCourseForm, duration: e.target.value })}
+                    />
+                  </div>
+                  {error && <div className="error">{error}</div>}
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <button type="submit" className="admin-btn admin-btn--primary">Save</button>
+                    <button type="button" onClick={() => setShowEditCourseModal(false)} className="admin-btn admin-btn--secondary">Cancel</button>
                     <button
                       type="button"
-                      className="admin-btn admin-btn--primary"
-                      onClick={() => setIsEditingProfile((v) => !v)}
-                      disabled={profileSaving}
+                      onClick={() => {
+                        setConfirmModal({
+                          show: true,
+                          title: '🗑️ Delete Course',
+                          message: `Are you sure you want to delete "${editingCourse?.name}"?`,
+                          onConfirm: async () => {
+                            setConfirmModal({ ...confirmModal, show: false })
+                            await deleteCourse()
+                          },
+                        })
+                      }}
+                      className="admin-btn admin-btn--danger"
                     >
-                      {isEditingProfile ? 'Done' : 'Edit profile'}
-                    </button>
-
-                    <button type="button" className="admin-btn admin-btn--secondary" onClick={() => setShowUserInfo(false)}>
-                      Close
+                      Delete
                     </button>
                   </div>
+                </form>
+              </div>
+            </div>
+          )
+        }
 
-                  {isEditingProfile && (
-                    <div style={{ display: 'grid', gap: '12px', marginTop: '10px' }}>
-                      <form className="card" style={{ padding: '16px' }} onSubmit={saveProfile}>
-                        <h3 style={{ marginBottom: '10px' }}>Update profile</h3>
-                        <div className="admin-form-group">
-                          <label className="admin-form-label">Email</label>
-                          <input
-                            type="email"
-                            className="admin-form-input"
-                            value={profileForm.email}
-                            onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                          />
-                        </div>
-                        <div className="admin-form-group">
-                          <label className="admin-form-label">Full name</label>
-                          <input
-                            type="text"
-                            className="admin-form-input"
-                            value={profileForm.fullName}
-                            onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
-                          />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                          <button type="submit" className="admin-btn admin-btn--primary" disabled={profileSaving}>
-                            Save
-                          </button>
-                        </div>
-                      </form>
+        {/* Create Course Modal */}
+        {
+          showCreateCourseModal && (
+            <div className="modal" onClick={() => setShowCreateCourseModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>📝 Create Course</h2>
+                  <button className="close-btn" onClick={() => setShowCreateCourseModal(false)}>×</button>
+                </div>
+                <form onSubmit={createCourse}>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Course Name <span>*</span></label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={createCourseForm.name}
+                      onChange={(e) => setCreateCourseForm({ ...createCourseForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Price (USD) <span>*</span></label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="admin-form-input"
+                      value={createCourseForm.price}
+                      onChange={(e) => setCreateCourseForm({ ...createCourseForm, price: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Description</label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={createCourseForm.description}
+                      onChange={(e) => setCreateCourseForm({ ...createCourseForm, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Instructor</label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={createCourseForm.instructor}
+                      onChange={(e) => setCreateCourseForm({ ...createCourseForm, instructor: e.target.value })}
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label className="admin-form-label">Duration</label>
+                    <input
+                      type="text"
+                      className="admin-form-input"
+                      value={createCourseForm.duration}
+                      onChange={(e) => setCreateCourseForm({ ...createCourseForm, duration: e.target.value })}
+                    />
+                  </div>
+                  {error && <div className="error">{error}</div>}
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <button type="submit" className="admin-btn admin-btn--primary">Create</button>
+                    <button type="button" onClick={() => setShowCreateCourseModal(false)} className="admin-btn admin-btn--secondary">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )
+        }
 
-                      <form className="card" style={{ padding: '16px' }} onSubmit={changePassword}>
-                        <h3 style={{ marginBottom: '10px' }}>Change password</h3>
-                        <div className="admin-form-group">
-                          <label className="admin-form-label">Current password</label>
-                          <input
-                            type="password"
-                            className="admin-form-input"
-                            value={passwordForm.currentPassword}
-                            onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="admin-form-group">
-                          <label className="admin-form-label">New password</label>
-                          <input
-                            type="password"
-                            className="admin-form-input"
-                            value={passwordForm.newPassword}
-                            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                          <button type="submit" className="admin-btn admin-btn--primary" disabled={profileSaving}>
-                            Update password
-                          </button>
-                        </div>
-                      </form>
+        {/* Notification Toast */}
+        {
+          notification.show && (
+            <div className={`notification notification-${notification.type}`}>
+              <div className="notification-content">
+                <div className="notification-icon">
+                  {notification.type === 'success' && '✅'}
+                  {notification.type === 'error' && '❌'}
+                  {notification.type === 'info' && 'ℹ️'}
+                  {notification.type === 'warning' && '⚠️'}
+                </div>
+                <div className="notification-text">
+                  <div className="notification-title">{notification.title}</div>
+                  <div className="notification-message">{notification.message}</div>
+                  {notification.tempPassword && (
+                    <div className="notification-password">
+                      <strong>🔑 Temporary Password:</strong>
+                      <code style={{
+                        background: 'rgba(0,0,0,0.1)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        marginLeft: '8px',
+                        fontFamily: 'monospace',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        color: '#4f46e5'
+                      }}>
+                        {notification.tempPassword}
+                      </code>
                     </div>
                   )}
                 </div>
-              )}
+                <button
+                  className="notification-close"
+                  onClick={() => setNotification({ ...notification, show: false })}
+                >
+                  ×
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
+
+        {/* User Info Modal */}
+        {
+          showUserInfo && (
+            <div className="modal" onClick={() => { setShowUserInfo(false); setIsEditingProfile(false) }}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+                <div className="modal-header">
+                  <h2>👤 Account Info</h2>
+                  <button className="close-btn" onClick={() => setShowUserInfo(false)}>×</button>
+                </div>
+
+                {userInfoLoading ? (
+                  <div className="loading" style={{ margin: '18px 0' }} />
+                ) : (
+                  <div style={{ display: 'grid', gap: '12px', paddingTop: '6px' }}>
+                    <div className="card" style={{ padding: '16px' }}>
+                      <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Signed in</div>
+                      <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '6px' }}>{userInfo?.username || user?.username}</div>
+                      <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <span className="chip chip-primary">Role: {userInfo?.role || user?.role}</span>
+                        {userInfo?.id && <span className="chip chip-muted">User ID: {userInfo.id}</span>}
+                      </div>
+                    </div>
+
+                    <div className="card" style={{ padding: '16px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700 }}>Email</div>
+                          <div style={{ marginTop: '6px', fontWeight: 700, color: '#111827' }}>{userInfo?.email || '—'}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700 }}>Student ID</div>
+                          <div style={{ marginTop: '6px', fontWeight: 700, color: '#111827' }}>{userInfo?.studentId || '—'}</div>
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700 }}>Full name</div>
+                          <div style={{ marginTop: '6px', fontWeight: 700, color: '#111827' }}>{userInfo?.fullName || '—'}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginTop: '6px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--primary"
+                        onClick={() => setIsEditingProfile((v) => !v)}
+                        disabled={profileSaving}
+                      >
+                        {isEditingProfile ? 'Done' : 'Edit profile'}
+                      </button>
+
+                      <button type="button" className="admin-btn admin-btn--secondary" onClick={() => setShowUserInfo(false)}>
+                        Close
+                      </button>
+                    </div>
+
+                    {isEditingProfile && (
+                      <div style={{ display: 'grid', gap: '12px', marginTop: '10px' }}>
+                        <form className="card" style={{ padding: '16px' }} onSubmit={saveProfile}>
+                          <h3 style={{ marginBottom: '10px' }}>Update profile</h3>
+                          <div className="admin-form-group">
+                            <label className="admin-form-label">Email</label>
+                            <input
+                              type="email"
+                              className="admin-form-input"
+                              value={profileForm.email}
+                              onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                            />
+                          </div>
+                          <div className="admin-form-group">
+                            <label className="admin-form-label">Full name</label>
+                            <input
+                              type="text"
+                              className="admin-form-input"
+                              value={profileForm.fullName}
+                              onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                            />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button type="submit" className="admin-btn admin-btn--primary" disabled={profileSaving}>
+                              Save
+                            </button>
+                          </div>
+                        </form>
+
+                        <form className="card" style={{ padding: '16px' }} onSubmit={changePassword}>
+                          <h3 style={{ marginBottom: '10px' }}>Change password</h3>
+                          <div className="admin-form-group">
+                            <label className="admin-form-label">Current password</label>
+                            <input
+                              type="password"
+                              className="admin-form-input"
+                              value={passwordForm.currentPassword}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                              required
+                            />
+                          </div>
+                          <div className="admin-form-group">
+                            <label className="admin-form-label">New password</label>
+                            <input
+                              type="password"
+                              className="admin-form-input"
+                              value={passwordForm.newPassword}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                              required
+                            />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button type="submit" className="admin-btn admin-btn--primary" disabled={profileSaving}>
+                              Update password
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        }
 
         {/* Confirm Modal */}
-        {confirmModal.show && (
-          <div className="modal" onClick={() => setConfirmModal({ ...confirmModal, show: false })}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
-              <div className="modal-header">
-                <h2>{confirmModal.title}</h2>
-                <button className="close-btn" onClick={() => setConfirmModal({ ...confirmModal, show: false })}>×</button>
-              </div>
-              <div style={{ padding: '20px 0', fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
-                {confirmModal.message}
-              </div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={() => setConfirmModal({ ...confirmModal, show: false })}
-                  className="admin-btn admin-btn--secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmModal.onConfirm}
-                  className="admin-btn admin-btn--primary"
-                >
-                  Confirm
-                </button>
+        {
+          confirmModal.show && (
+            <div className="modal" onClick={() => setConfirmModal({ ...confirmModal, show: false })}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+                <div className="modal-header">
+                  <h2>{confirmModal.title}</h2>
+                  <button className="close-btn" onClick={() => setConfirmModal({ ...confirmModal, show: false })}>×</button>
+                </div>
+                <div style={{ padding: '20px 0', fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
+                  {confirmModal.message}
+                </div>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmModal({ ...confirmModal, show: false })}
+                    className="admin-btn admin-btn--secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmModal.onConfirm}
+                    className="admin-btn admin-btn--primary"
+                  >
+                    Confirm
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )
+        }
+      </div >
     )
   }
 
@@ -2049,108 +2180,130 @@ export default function Home() {
           {activeTab === 'enrollments' && (
             <div className="animate-fade-in">
               <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #f1f5f9' }}>
-                <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
                     <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>My Enrollments</h2>
                     <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>Manage and track your subscribed courses.</p>
                   </div>
-                  <div style={{ padding: '6px 12px', background: '#eff6ff', borderRadius: '99px', color: '#3b82f6', fontSize: '12px', fontWeight: '600' }}>
-                    {myEnrollments.length} Active
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="admin-panel__search" style={{ margin: 0 }}>
+                      <span className="admin-panel__search-icon">🔍</span>
+                      <input
+                        type="text"
+                        className="admin-panel__search-input"
+                        placeholder="Search courses..."
+                        value={enrollmentSearch}
+                        onChange={(e) => setEnrollmentSearch(e.target.value)}
+                        style={{ width: '200px' }}
+                      />
+                    </div>
+                    <div style={{ padding: '6px 12px', background: '#eff6ff', borderRadius: '99px', color: '#3b82f6', fontSize: '12px', fontWeight: '600' }}>
+                      {myEnrollments.length} Active
+                    </div>
                   </div>
                 </div>
 
-                {myEnrollments.length > 0 ? (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
-                      <thead>
-                        <tr style={{ background: '#f8fafc' }}>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 0 0 8px' }}>Course</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Status</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Enrolled Date</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', borderRadius: '0 8px 8px 0' }}>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {myEnrollments.map((enrollment: any) => {
-                          // Find course details if not populated
-                          const courseDetails = enrollment.course || courses.find(c => c.id === enrollment.courseId) || {};
-                          const courseName = courseDetails.name || 'Unknown Course';
+                {(() => {
+                  const filteredEnrollments = myEnrollments.filter((enrollment: any) => {
+                    const courseDetails = enrollment.course || courses.find(c => c.id === enrollment.courseId) || {};
+                    const courseName = courseDetails.name || 'Unknown Course';
+                    return courseName.toLowerCase().includes(enrollmentSearch.toLowerCase()) ||
+                      (enrollment.id.toString().includes(enrollmentSearch));
+                  });
 
-                          // Safe date formatting
-                          let dateDisplay = 'N/A';
-                          try {
-                            let dateObj: Date | null = null;
-                            if (enrollment.enrollmentDate || enrollment.createdAt) {
-                              dateObj = new Date(enrollment.enrollmentDate || enrollment.createdAt);
-                            }
+                  return filteredEnrollments.length > 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc' }}>
+                            <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 0 0 8px' }}>Course</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Status</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Enrolled Date</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', borderRadius: '0 8px 8px 0' }}>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredEnrollments.map((enrollment: any) => {
+                            // Find course details if not populated
+                            const courseDetails = enrollment.course || courses.find(c => c.id === enrollment.courseId) || {};
+                            const courseName = courseDetails.name || 'Unknown Course';
 
-                            // Fallback: Try to find purchase transaction
-                            if (!dateObj || isNaN(dateObj.getTime())) {
-                              const purchaseTx = myTransactions.find((t: any) =>
-                                t.description?.includes(courseName) &&
-                                (t.type === 'payment' || t.type === 'PAYMENT')
-                              );
-                              if (purchaseTx?.createdAt) {
-                                dateObj = new Date(purchaseTx.createdAt);
+                            // Safe date formatting
+                            let dateDisplay = 'N/A';
+                            try {
+                              let dateObj: Date | null = null;
+                              if (enrollment.enrollmentDate || enrollment.createdAt) {
+                                dateObj = new Date(enrollment.enrollmentDate || enrollment.createdAt);
                               }
-                            }
 
-                            if (dateObj && !isNaN(dateObj.getTime())) {
-                              dateDisplay = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                            }
-                          } catch (e) { console.error('Date error', e) }
+                              // Fallback: Try to find purchase transaction
+                              if (!dateObj || isNaN(dateObj.getTime())) {
+                                const purchaseTx = myTransactions.find((t: any) =>
+                                  t.description?.includes(courseName) &&
+                                  (t.type === 'payment' || t.type === 'PAYMENT')
+                                );
+                                if (purchaseTx?.createdAt) {
+                                  dateObj = new Date(purchaseTx.createdAt);
+                                }
+                              }
 
-                          return (
-                            <tr key={enrollment.id} className="hover-row" style={{ transition: 'background 0.2s' }}>
-                              <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', fontWeight: '600', color: '#334155' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px' }}>
-                                    {courseName.charAt(0)}
+                              if (dateObj && !isNaN(dateObj.getTime())) {
+                                dateDisplay = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                              }
+                            } catch (e) { console.error('Date error', e) }
+
+                            return (
+                              <tr key={enrollment.id} className="hover-row" style={{ transition: 'background 0.2s' }}>
+                                <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', fontWeight: '600', color: '#334155' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px' }}>
+                                      {courseName.charAt(0)}
+                                    </div>
+                                    <div>
+                                      <div>{courseName}</div>
+                                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>ID: #{enrollment.id}</div>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <div>{courseName}</div>
-                                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>ID: #{enrollment.id}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
-                                <span className={`status-badge status-${(enrollment.paymentStatus || enrollment.status || 'active').toLowerCase()}`} style={{ padding: '4px 10px', borderRadius: '99px', fontSize: '12px', fontWeight: '600' }}>
-                                  {enrollment.paymentStatus || enrollment.status || 'Active'}
-                                </span>
-                              </td>
-                              <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', color: '#64748b', fontSize: '14px' }}>
-                                {dateDisplay}
-                              </td>
-                              <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', textAlign: 'right' }}>
-                                <button
-                                  className="btn-sm"
-                                  onClick={() => { setActiveEnrollment(enrollment); setShowCoursePlayerModal(true); }}
-                                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #6366f1', background: '#6366f1', color: 'white', cursor: 'pointer', fontWeight: '600' }}
-                                  title="Start Learning"
-                                >
-                                  Go to Learn
-                                </button>
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎓</div>
-                    <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b', margin: '0 0 8px' }}>No enrollments yet</h3>
-                    <p style={{ color: '#64748b', margin: '0 0 24px', fontSize: '14px' }}>You haven't enrolled in any courses yet.</p>
-                    <button
-                      onClick={() => setActiveTab('courses')}
-                      className="btn btn-primary"
-                      style={{ padding: '10px 20px' }}
-                    >
-                      Browse Courses
-                    </button>
-                  </div>
-                )}
+                                </td>
+                                <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
+                                  <span className={`status-badge status-${(enrollment.paymentStatus || enrollment.status || 'active').toLowerCase()}`} style={{ padding: '4px 10px', borderRadius: '99px', fontSize: '12px', fontWeight: '600' }}>
+                                    {enrollment.paymentStatus || enrollment.status || 'Active'}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', color: '#64748b', fontSize: '14px' }}>
+                                  {dateDisplay}
+                                </td>
+                                <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', textAlign: 'right' }}>
+                                  <button
+                                    className="btn-sm"
+                                    onClick={() => { setActiveEnrollment(enrollment); setShowCoursePlayerModal(true); }}
+                                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', border: '1px solid #6366f1', background: '#6366f1', color: 'white', cursor: 'pointer', fontWeight: '600' }}
+                                    title="Start Learning"
+                                  >
+                                    Go to Learn
+                                  </button>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎓</div>
+                      <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b', margin: '0 0 8px' }}>No enrollments yet</h3>
+                      <p style={{ color: '#64748b', margin: '0 0 24px', fontSize: '14px' }}>You haven't enrolled in any courses yet.</p>
+                      <button
+                        onClick={() => setActiveTab('courses')}
+                        className="btn btn-primary"
+                        style={{ padding: '10px 20px' }}
+                      >
+                        Browse Courses
+                      </button>
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           )}
