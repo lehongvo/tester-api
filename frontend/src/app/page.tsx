@@ -2,6 +2,7 @@
 
 import axios from 'axios'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import RecentTransactions from './components/RecentTransactions'
 
 // Auto-detect API URL based on current host
 const getApiUrl = () => {
@@ -1360,35 +1361,20 @@ export default function Home() {
               </div>
             </div>
 
-            <div>
-              <h2 style={{ marginBottom: '20px', color: '#333' }}>📜 Recent Transactions</h2>
-              {loading ? (
-                <div className="loading"></div>
-              ) : (
-                <div style={{ maxHeight: '400px', overflowY: 'auto', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
-                  <table className="table">
-                    <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-                      <tr>
-                        <th>Type</th>
-                        <th>Amount</th>
-                        <th>Description</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {myTransactions.slice(0, 5).map((tx) => (
-                        <tr key={tx.id}>
-                          <td>{tx.type}</td>
-                          <td>${tx.amount}</td>
-                          <td>{tx.description || '-'}</td>
-                          <td>{new Date(tx.createdAt).toLocaleString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <RecentTransactions
+              loading={loading}
+              items={myTransactions}
+              onOpenAll={() => setActiveTab('history')}
+              onOpenDetail={(tx) => {
+                setNotification({
+                  show: true,
+                  type: 'info',
+                  title: '💳 Transaction Detail',
+                  message: `#${tx.id} • ${tx.type} • ${tx.amount}${tx.description ? ` • ${tx.description}` : ''}`,
+                })
+                setTimeout(() => setNotification((prev) => ({ ...prev, show: false })), 6000)
+              }}
+            />
           </div>
         )}
 
