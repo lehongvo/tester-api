@@ -1,8 +1,12 @@
-import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { Body, Controller, Get, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
+import { ChangePasswordResponseDto } from './dto/change-password-response.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { LoginDto } from './dto/login.dto';
+import { UpdateMeResponseDto } from './dto/update-me-response.dto';
+import { UpdateMeDto } from './dto/update-me.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('auth')
@@ -11,7 +15,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '🔐 User Login - Get Access Token',
     description: `
 **Authenticate user and get JWT access token**
@@ -28,9 +32,9 @@ This endpoint authenticates a user with username and password, and returns a JWT
 **Default Credentials:**
 - Username: \`admin\`
 - Password: \`admin123\`
-    `
+    `,
   })
-  @ApiBody({ 
+  @ApiBody({
     type: LoginDto,
     description: 'Login credentials',
     examples: {
@@ -38,46 +42,48 @@ This endpoint authenticates a user with username and password, and returns a JWT
         summary: 'Default admin account',
         value: {
           username: 'admin',
-          password: 'admin123'
-        }
-      }
-    }
+          password: 'admin123',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 201, 
-    description: '✅ Login successful - Access token returned. Copy the access_token and use it in Authorization header for protected endpoints.',
+  @ApiResponse({
+    status: 201,
+    description:
+      '✅ Login successful - Access token returned. Copy the access_token and use it in Authorization header for protected endpoints.',
     type: LoginResponseDto,
     schema: {
       example: {
-        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwic3ViIjoxLCJpYXQiOjE3NjcwMjU0ODcsImV4cCI6MTc2NzExMTg4N30.Y7-HnXpqHdZ4ek0B90q4Lab4SOxJCTigem0FJa7lPKY',
+        access_token:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwic3ViIjoxLCJpYXQiOjE3NjcwMjU0ODcsImV4cCI6MTc2NzExMTg4N30.Y7-HnXpqHdZ4ek0B90q4Lab4SOxJCTigem0FJa7lPKY',
         user: {
           id: 1,
-          username: 'admin'
-        }
-      }
-    }
+          username: 'admin',
+        },
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: '❌ Bad Request - Missing or invalid input',
     schema: {
       example: {
         statusCode: 400,
         message: ['username should not be empty', 'password should not be empty'],
-        error: 'Bad Request'
-      }
-    }
+        error: 'Bad Request',
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
+  @ApiResponse({
+    status: 401,
     description: '❌ Unauthorized - Invalid username or password',
     schema: {
       example: {
         statusCode: 401,
         message: 'Invalid credentials',
-        error: 'Unauthorized'
-      }
-    }
+        error: 'Unauthorized',
+      },
+    },
   })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
@@ -86,7 +92,7 @@ This endpoint authenticates a user with username and password, and returns a JWT
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '🚪 User Logout',
     description: `
 **Logout the authenticated user**
@@ -94,26 +100,26 @@ This endpoint authenticates a user with username and password, and returns a JWT
 This endpoint logs out the current user. Requires a valid JWT access token in the Authorization header.
 
 **Note:** This is a stateless logout. The token will remain valid until it expires (24 hours). For security, you should discard the token on the client side after logout.
-    `
+    `,
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '✅ Logout successful',
     schema: {
       example: {
-        message: 'Logged out successfully'
-      }
-    }
+        message: 'Logged out successfully',
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
+  @ApiResponse({
+    status: 401,
     description: '❌ Unauthorized - Invalid or missing JWT token',
     schema: {
       example: {
         statusCode: 401,
-        message: 'Unauthorized'
-      }
-    }
+        message: 'Unauthorized',
+      },
+    },
   })
   async logout(@Request() req) {
     return this.authService.logout();
@@ -122,31 +128,77 @@ This endpoint logs out the current user. Requires a valid JWT access token in th
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '👤 Get Current User Info',
     description: `
 **Get current authenticated user information**
 
 This endpoint returns the current user's information based on the JWT token. Useful for refreshing user data.
-    `
+    `,
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '✅ User information retrieved',
     schema: {
       example: {
         id: 1,
         username: 'admin',
-        role: 'admin'
-      }
-    }
+        role: 'admin',
+      },
+    },
   })
-  @ApiResponse({ 
-    status: 401, 
+  @ApiResponse({
+    status: 401,
     description: '❌ Unauthorized - Invalid or missing JWT token',
   })
   async getMe(@Request() req) {
     return this.authService.getMe(req.user.userId);
   }
-}
 
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: '✏️ Update My Profile (email/fullName)',
+    description: `
+**Update current authenticated user profile**
+
+**Access Rules:**
+- Any authenticated user can update **their own** profile.
+
+**Allowed fields:**
+- email
+- fullName
+
+To change password, use: **PATCH /auth/me/password**
+    `,
+  })
+  @ApiBody({ type: UpdateMeDto })
+  @ApiResponse({ status: 200, description: '✅ Profile updated successfully', type: UpdateMeResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or missing JWT token' })
+  async updateMe(@Request() req, @Body() dto: UpdateMeDto) {
+    return this.authService.updateMe(req.user.userId, dto);
+  }
+
+  @Patch('me/password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: '🔒 Change My Password',
+    description: `
+**Change current authenticated user password**
+
+**Access Rules:**
+- Any authenticated user can change **their own** password.
+
+Requires current password for verification.
+    `,
+  })
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({ status: 200, description: '✅ Password updated successfully', type: ChangePasswordResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad request - current password incorrect' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or missing JWT token' })
+  async changeMyPassword(@Request() req, @Body() dto: ChangePasswordDto) {
+    return this.authService.changeMyPassword(req.user.userId, dto.currentPassword, dto.newPassword);
+  }
+}

@@ -7,6 +7,7 @@ import { AccountModule } from './account/account.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { CourseModule } from './course/course.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
+
 import { StudentFeaturesModule } from './student-features/student-features.module';
 import { SeedModule } from './seed/seed.module';
 import { User } from './auth/entities/user.entity';

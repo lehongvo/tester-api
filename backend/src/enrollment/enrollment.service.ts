@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Enrollment } from './entities/enrollment.entity';
 import { PaymentStatus } from './entities/enrollment.entity';
+import { Role } from '../auth/entities/role.enum';
 
 @Injectable()
 export class EnrollmentService {
@@ -36,6 +37,33 @@ export class EnrollmentService {
       where: { userId: validUserId },
       order: { enrolledAt: 'DESC' },
     });
+  }
+
+  async getAllEnrollments(): Promise<Enrollment[]> {
+    return this.enrollmentRepository.find({ order: { enrolledAt: 'DESC' } });
+  }
+
+  async getEnrollmentByIdForRequester(
+    enrollmentId: number,
+    requester: { userId: number; role: Role },
+  ): Promise<Enrollment> {
+    const enrollment = await this.enrollmentRepository.findOne({
+      where: { id: enrollmentId },
+    });
+
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment not found');
+    }
+
+    if (requester.role === Role.Admin) {
+      return enrollment;
+    }
+
+    if (enrollment.userId !== requester.userId) {
+      throw new ForbiddenException('You can only view your own enrollments');
+    }
+
+    return enrollment;
   }
 
   async checkEnrollment(userId: number, courseId: number): Promise<boolean> {
