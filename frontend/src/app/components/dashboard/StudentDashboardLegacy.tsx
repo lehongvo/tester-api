@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import type { Account, Course, Enrollment, Transaction, User, Voucher } from '../../types'
 import VoucherSelect from '../VoucherSelect'
 
@@ -21,6 +22,24 @@ export default function StudentDashboardLegacy(props: {
   onBuyCourse: (courseId: number) => void
 }) {
   const myEnrollments = props.enrollments
+  const [courseSearch, setCourseSearch] = useState('')
+  const [courseStatus, setCourseStatus] = useState<'all' | 'available' | 'enrolled'>('all')
+
+  const filteredCourses = useMemo(() => {
+    const q = courseSearch.trim().toLowerCase()
+
+    return props.courses.filter((c) => {
+      const enrolled = myEnrollments.some((e) => e.courseId === c.id)
+
+      if (courseStatus === 'enrolled' && !enrolled) return false
+      if (courseStatus === 'available' && enrolled) return false
+
+      if (!q) return true
+      return [c.name, c.description, c.instructor, c.duration, String(c.id)]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q))
+    })
+  }, [props.courses, myEnrollments, courseSearch, courseStatus])
 
   return (
     <div>
@@ -57,31 +76,85 @@ export default function StudentDashboardLegacy(props: {
 
         {props.activeTab === 'courses' && (
           <div>
-            <h2>Available Courses</h2>
+            <div className="courses-header">
+              <div>
+                <div className="courses-header__eyebrow">Catalog</div>
+                <h2 className="courses-header__title">Available Courses</h2>
+                <div className="courses-header__subtitle">Browse courses and enroll with an optional voucher.</div>
+              </div>
+
+              <div className="courses-tools">
+                <div className="courses-search">
+                  <span className="courses-search__icon">⌕</span>
+                  <input
+                    className="courses-search__input"
+                    value={courseSearch}
+                    onChange={(e) => setCourseSearch(e.target.value)}
+                    placeholder="Search courses (name, instructor, duration, id…)"
+                  />
+                </div>
+
+                <div className="courses-filter">
+                  <button type="button" className={`courses-filter__btn ${courseStatus === 'all' ? 'active' : ''}`} onClick={() => setCourseStatus('all')}>All</button>
+                  <button type="button" className={`courses-filter__btn ${courseStatus === 'available' ? 'active' : ''}`} onClick={() => setCourseStatus('available')}>Available</button>
+                  <button type="button" className={`courses-filter__btn ${courseStatus === 'enrolled' ? 'active' : ''}`} onClick={() => setCourseStatus('enrolled')}>Enrolled</button>
+                </div>
+              </div>
+            </div>
+
+            {filteredCourses.length === 0 ? (
+              <div className="admin-panel" style={{ padding: 18 }}>
+                <div style={{ color: 'rgba(107, 114, 128, 0.95)', fontWeight: 700 }}>No courses found.</div>
+              </div>
+            ) : null}
+
             <div className="courses-grid">
-              {props.courses.map((course) => {
+              {filteredCourses.map((course) => {
                 const isEnrolled = myEnrollments.some((e) => e.courseId === course.id)
 
                 return (
-                  <div key={course.id} className="course-card" style={{ cursor: 'pointer' }}>
-                    <h3>{course.name}</h3>
-                    <p>{course.description}</p>
-                    <div className="price">${course.price}</div>
+                  <div
+                    key={course.id}
+                    className={`course-tile ${isEnrolled ? 'course-tile--enrolled' : ''}`}
+                  >
+                    <div className="course-tile__top">
+                      <div className="course-tile__title">{course.name}</div>
+                      <div className="course-tile__price">
+                        <span className="course-tile__price-value">${Number(course.price).toFixed(2)}</span>
+                        <span className="course-tile__price-unit">USD</span>
+                      </div>
+                    </div>
 
-                    {!isEnrolled && (
-                      <VoucherSelect vouchers={props.vouchers} value={props.selectedVoucherCode} onChange={props.onSelectVoucher} />
+                    {course.description ? (
+                      <div className="course-tile__desc">{course.description}</div>
+                    ) : (
+                      <div className="course-tile__desc course-tile__desc--muted">No description provided.</div>
+                    )}
+
+                    <div className="course-tile__meta">
+                      {course.instructor ? <span className="chip chip-muted">👨‍🏫 {course.instructor}</span> : null}
+                      {course.duration ? <span className="chip chip-primary">⏱ {course.duration}</span> : null}
+                      {isEnrolled ? <span className="chip chip-primary">✅ Enrolled</span> : <span className="chip chip-muted">🆕 Available</span>}
+                    </div>
+
+                    {!isEnrolled ? (
+                      <div className="course-tile__voucher">
+                        <VoucherSelect vouchers={props.vouchers} value={props.selectedVoucherCode} onChange={props.onSelectVoucher} />
+                      </div>
+                    ) : (
+                      <div className="course-tile__enrolled-note">You are already enrolled in this course.</div>
                     )}
 
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation()
                         if (!isEnrolled) props.onBuyCourse(course.id)
                       }}
                       disabled={isEnrolled}
-                      className={`btn ${isEnrolled ? 'btn-secondary' : 'btn-primary'}`}
-                      style={{ marginTop: 10, width: '100%', opacity: isEnrolled ? 0.7 : 1, cursor: isEnrolled ? 'default' : 'pointer' }}
+                      className={`course-tile__cta btn ${isEnrolled ? 'btn-secondary' : 'btn-primary'}`}
                     >
-                      {isEnrolled ? '✅ Enrolled' : 'Enroll Now'}
+                      {isEnrolled ? '✅ ENROLLED' : 'ENROLL NOW'}
                     </button>
                   </div>
                 )
