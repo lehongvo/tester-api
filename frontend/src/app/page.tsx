@@ -61,7 +61,7 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  
+
   // Admin states
   const [students, setStudents] = useState<Student[]>([])
   const [courses, setCourses] = useState<Course[]>([])
@@ -88,7 +88,7 @@ export default function Home() {
     instructor: '',
     duration: '',
   })
-  
+
   // Student states
   const [account, setAccount] = useState<Account | null>(null)
   const [myTransactions, setMyTransactions] = useState<Transaction[]>([])
@@ -118,7 +118,7 @@ export default function Home() {
   const [showBuyCourseModal, setShowBuyCourseModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'courses' | 'enrollments' | 'history'>('dashboard')
   const [balanceVisible, setBalanceVisible] = useState(true)
-  
+
   // Form states
   const [createStudentForm, setCreateStudentForm] = useState({
     username: '',
@@ -147,7 +147,7 @@ export default function Home() {
     instructor: '',
     duration: '',
   })
-  
+
   // Notification state
   const [notification, setNotification] = useState<{
     show: boolean
@@ -194,6 +194,33 @@ export default function Home() {
   const [showCourseDetailModal, setShowCourseDetailModal] = useState(false)
   const [activeEnrollment, setActiveEnrollment] = useState<any>(null)
   const [showCoursePlayerModal, setShowCoursePlayerModal] = useState(false)
+
+  // Transaction Details & Dashboard
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null)
+  const [showTransactionDetailModal, setShowTransactionDetailModal] = useState(false)
+  const [dashboardTxSearch, setDashboardTxSearch] = useState('')
+
+  // Transfer Search State
+  const [transferStudentsList, setTransferStudentsList] = useState<Student[]>([])
+  const [transferSearchTerm, setTransferSearchTerm] = useState('')
+  const [showTransferSearchConfig, setShowTransferSearchConfig] = useState(false)
+
+  const fetchTransferStudents = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/student-features/transfer/students`, { headers: getAuthHeaders() })
+      setTransferStudentsList(res.data)
+    } catch (e) {
+      console.error('Failed to fetch students for transfer', e)
+    }
+  }
+
+  // Effect to fetch students when transfer modal opens
+  useEffect(() => {
+    if (showTransferModal) {
+      fetchTransferStudents()
+      setTransferSearchTerm('')
+    }
+  }, [showTransferModal])
 
   const filteredMyTransactions = myTransactions.filter((tx: any) => {
     // Date Filter
@@ -339,7 +366,7 @@ export default function Home() {
             const userData = JSON.parse(userStr)
             console.log('Using localStorage user data:', userData)
             setUser(userData)
-      setIsAuthenticated(true)
+            setIsAuthenticated(true)
             if (userData.role === 'admin') {
               fetchAdminData()
             } else {
@@ -366,7 +393,7 @@ export default function Home() {
       console.log('Login response user:', response.data.user)
       setUser(response.data.user)
       setIsAuthenticated(true)
-      
+
       if (response.data.user.role === 'admin') {
         fetchAdminData()
       } else {
@@ -477,17 +504,17 @@ export default function Home() {
         age: createStudentForm.age ? parseInt(createStudentForm.age) : undefined,
         address: createStudentForm.address || undefined,
       }
-      
+
       // Only include studentId if provided (optional, will be auto-generated)
       if (createStudentForm.studentId) {
         payload.studentId = createStudentForm.studentId
       }
-      
+
       // Only include password if provided (optional, will be auto-generated)
       if (createStudentForm.password) {
         payload.password = createStudentForm.password
       }
-      
+
       const response = await axios.post(
         `${API_URL}/admin/students`,
         payload,
@@ -787,13 +814,13 @@ export default function Home() {
       return 'Good evening'
     }
 
-  return (
+    return (
       <div className="admin-layout">
         {/* Sidebar */}
         <aside className="admin-sidebar">
           <div className="admin-sidebar__logo">
             <div className="admin-sidebar__logo-icon">🏦</div>
-    <div>
+            <div>
               <div className="admin-sidebar__logo-text">School Bank</div>
               <div className="admin-sidebar__logo-sub">Admin Portal</div>
             </div>
@@ -817,7 +844,7 @@ export default function Home() {
                 <span className="admin-sidebar__item-icon">📚</span>
                 <span className="admin-sidebar__item-text">Courses</span>
                 <span className="admin-sidebar__item-badge">{courses.length}</span>
-            </button>
+              </button>
               <button
                 className={`admin-sidebar__item ${adminTab === 'transactions' ? 'active' : ''}`}
                 onClick={() => setAdminTab('transactions')}
@@ -825,8 +852,8 @@ export default function Home() {
                 <span className="admin-sidebar__item-icon">💳</span>
                 <span className="admin-sidebar__item-text">Transactions</span>
                 <span className="admin-sidebar__item-badge">{transactions.length}</span>
-            </button>
-          </div>
+              </button>
+            </div>
 
             <div className="admin-sidebar__section">
               <div className="admin-sidebar__section-title">Quick Actions</div>
@@ -844,14 +871,14 @@ export default function Home() {
                 <span className="admin-sidebar__item-icon">📝</span>
                 <span className="admin-sidebar__item-text">New Course</span>
               </button>
-        </div>
+            </div>
           </nav>
 
           <div className="admin-sidebar__footer">
             <button className="admin-sidebar__user" onClick={openUserInfo}>
               <div className="admin-sidebar__user-avatar">
                 {String(user?.username || 'A').charAt(0).toUpperCase()}
-      </div>
+              </div>
               <div className="admin-sidebar__user-info">
                 <div className="admin-sidebar__user-name">{user?.username}</div>
                 <div className="admin-sidebar__user-role">Administrator</div>
@@ -898,7 +925,7 @@ export default function Home() {
               <p style={{ color: '#64748b', fontSize: '14px' }}>
                 Here&apos;s what&apos;s happening with your school bank today.
               </p>
-                </div>
+            </div>
 
             {/* Stat Cards */}
             <div className="admin-stats">
@@ -910,11 +937,11 @@ export default function Home() {
                 <div className="admin-stat-card__header">
                   <div className="admin-stat-card__icon admin-stat-card__icon--primary">👥</div>
                   <span className="admin-stat-card__label">Students</span>
-              </div>
+                </div>
                 <div className="admin-stat-card__value">{students.length}</div>
                 <div className="admin-stat-card__trend admin-stat-card__trend--up">
                   Active accounts
-            </div>
+                </div>
               </button>
 
               <button
@@ -929,7 +956,7 @@ export default function Home() {
                 <div className="admin-stat-card__value">{courses.length}</div>
                 <div className="admin-stat-card__trend admin-stat-card__trend--up">
                   Available courses
-              </div>
+                </div>
               </button>
 
               <button
@@ -940,13 +967,13 @@ export default function Home() {
                 <div className="admin-stat-card__header">
                   <div className="admin-stat-card__icon admin-stat-card__icon--warning">💳</div>
                   <span className="admin-stat-card__label">Transactions</span>
-            </div>
+                </div>
                 <div className="admin-stat-card__value">{transactions.length}</div>
                 <div className="admin-stat-card__trend">
                   All time
                 </div>
               </button>
-              </div>
+            </div>
 
             {/* Students Panel */}
             {adminTab === 'students' && (
@@ -970,11 +997,11 @@ export default function Home() {
                     >
                       ➕ Add Student
                     </button>
-            </div>
-          </div>
+                  </div>
+                </div>
 
-        {loading ? (
-              <div className="loading"></div>
+                {loading ? (
+                  <div className="loading"></div>
                 ) : filteredStudents.length === 0 ? (
                   <div className="admin-empty">
                     <div className="admin-empty__icon">👥</div>
@@ -987,22 +1014,22 @@ export default function Home() {
                   <div style={{ overflowX: 'auto' }}>
                     <table className="admin-table">
                       <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Age</th>
-                <th>Address</th>
+                        <tr>
+                          <th>ID</th>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Age</th>
+                          <th>Address</th>
                           <th>Balance</th>
                           <th style={{ width: '120px' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+                        </tr>
+                      </thead>
+                      <tbody>
                         {filteredStudents.map((student) => (
-                  <tr key={student.id}>
+                          <tr key={student.id}>
                             <td style={{ fontWeight: 600, color: '#64748b' }}>#{student.id}</td>
                             <td style={{ fontWeight: 600 }}>{student.name}</td>
-                    <td>{student.email}</td>
+                            <td>{student.email}</td>
                             <td>{student.age || '—'}</td>
                             <td>{student.address || '—'}</td>
                             <td>
@@ -1013,30 +1040,30 @@ export default function Home() {
                                 padding: '4px 10px',
                                 borderRadius: '6px'
                               }}>
-                            ${student.balance?.toFixed(2) || '0.00'}
+                                ${student.balance?.toFixed(2) || '0.00'}
                               </span>
-                          </td>
-                    <td>
+                            </td>
+                            <td>
                               <div className="admin-row-actions" style={{ opacity: 1 }}>
-                      <button
+                                <button
                                   className="admin-row-action admin-row-action--edit"
                                   title="Set Balance"
-                              onClick={() => {
-                                setSelectedStudentId(student.userId || student.id)
-                                setShowSetBalanceModal(true)
-                              }}
-                            >
+                                  onClick={() => {
+                                    setSelectedStudentId(student.userId || student.id)
+                                    setShowSetBalanceModal(true)
+                                  }}
+                                >
                                   💰
-                      </button>
+                                </button>
                               </div>
-                    </td>
-                  </tr>
+                            </td>
+                          </tr>
                         ))}
-            </tbody>
-          </table>
-          </div>
-        )}
-          </div>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Courses Panel */}
@@ -1064,8 +1091,8 @@ export default function Home() {
                   </div>
                 </div>
 
-            {loading ? (
-              <div className="loading"></div>
+                {loading ? (
+                  <div className="loading"></div>
                 ) : filteredCourses.length === 0 ? (
                   <div className="admin-empty">
                     <div className="admin-empty__icon">📚</div>
@@ -1078,18 +1105,18 @@ export default function Home() {
                   <div style={{ overflowX: 'auto' }}>
                     <table className="admin-table">
                       <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
+                        <tr>
+                          <th>ID</th>
+                          <th>Name</th>
                           <th>Price</th>
-                      <th>Instructor</th>
-                      <th>Duration</th>
+                          <th>Instructor</th>
+                          <th>Duration</th>
                           <th style={{ width: '120px' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                        </tr>
+                      </thead>
+                      <tbody>
                         {filteredCourses.map((course) => (
-                      <tr key={course.id}>
+                          <tr key={course.id}>
                             <td style={{ fontWeight: 600, color: '#64748b' }}>#{course.id}</td>
                             <td style={{ fontWeight: 600 }}>{course.name}</td>
                             <td>
@@ -1128,13 +1155,13 @@ export default function Home() {
                                 </button>
                               </div>
                             </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
             )}
 
             {/* Transactions Panel */}
@@ -1156,8 +1183,8 @@ export default function Home() {
                   </div>
                 </div>
 
-            {loading ? (
-              <div className="loading"></div>
+                {loading ? (
+                  <div className="loading"></div>
                 ) : filteredTransactions.length === 0 ? (
                   <div className="admin-empty">
                     <div className="admin-empty__icon">💳</div>
@@ -1170,17 +1197,17 @@ export default function Home() {
                   <div style={{ overflowX: 'auto' }}>
                     <table className="admin-table">
                       <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Type</th>
-                      <th>From</th>
-                      <th>To</th>
-                      <th>Amount</th>
-                      <th>Description</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                        <tr>
+                          <th>ID</th>
+                          <th>Type</th>
+                          <th>From</th>
+                          <th>To</th>
+                          <th>Amount</th>
+                          <th>Description</th>
+                          <th>Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
                         {filteredTransactions.map((tx) => (
                           <tr
                             key={tx.id}
@@ -1213,15 +1240,15 @@ export default function Home() {
                             <td style={{ color: '#64748b', fontSize: '13px' }}>
                               {new Date(tx.createdAt).toLocaleString()}
                             </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>
-            )}
-        </div>
         </main>
 
         {/* Create Student Modal */}
@@ -1275,21 +1302,21 @@ export default function Home() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div className="admin-form-group">
                     <label className="admin-form-label">Age</label>
-                  <input
-                    type="number"
+                    <input
+                      type="number"
                       className="admin-form-input"
-                    value={createStudentForm.age}
-                    onChange={(e) => setCreateStudentForm({ ...createStudentForm, age: e.target.value })}
-                  />
-                </div>
+                      value={createStudentForm.age}
+                      onChange={(e) => setCreateStudentForm({ ...createStudentForm, age: e.target.value })}
+                    />
+                  </div>
                   <div className="admin-form-group">
                     <label className="admin-form-label">Address</label>
-                  <input
-                    type="text"
+                    <input
+                      type="text"
                       className="admin-form-input"
-                    value={createStudentForm.address}
-                    onChange={(e) => setCreateStudentForm({ ...createStudentForm, address: e.target.value })}
-                  />
+                      value={createStudentForm.address}
+                      onChange={(e) => setCreateStudentForm({ ...createStudentForm, address: e.target.value })}
+                    />
                   </div>
                 </div>
                 {error && <div className="error">{error}</div>}
@@ -1501,7 +1528,7 @@ export default function Home() {
                 {notification.type === 'error' && '❌'}
                 {notification.type === 'info' && 'ℹ️'}
                 {notification.type === 'warning' && '⚠️'}
-      </div>
+              </div>
               <div className="notification-text">
                 <div className="notification-title">{notification.title}</div>
                 <div className="notification-message">{notification.message}</div>
@@ -1557,7 +1584,7 @@ export default function Home() {
 
                   <div className="card" style={{ padding: '16px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-    <div>
+                      <div>
                         <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700 }}>Email</div>
                         <div style={{ marginTop: '6px', fontWeight: 700, color: '#111827' }}>{userInfo?.email || '—'}</div>
                       </div>
@@ -1570,7 +1597,7 @@ export default function Home() {
                         <div style={{ marginTop: '6px', fontWeight: 700, color: '#111827' }}>{userInfo?.fullName || '—'}</div>
                       </div>
                     </div>
-          </div>
+                  </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginTop: '6px', flexWrap: 'wrap' }}>
                     <button
@@ -1585,7 +1612,7 @@ export default function Home() {
                     <button type="button" className="admin-btn admin-btn--secondary" onClick={() => setShowUserInfo(false)}>
                       Close
                     </button>
-              </div>
+                  </div>
 
                   {isEditingProfile && (
                     <div style={{ display: 'grid', gap: '12px', marginTop: '10px' }}>
@@ -1599,7 +1626,7 @@ export default function Home() {
                             value={profileForm.email}
                             onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
                           />
-              </div>
+                        </div>
                         <div className="admin-form-group">
                           <label className="admin-form-label">Full name</label>
                           <input
@@ -1608,12 +1635,12 @@ export default function Home() {
                             value={profileForm.fullName}
                             onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
                           />
-            </div>
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                           <button type="submit" className="admin-btn admin-btn--primary" disabled={profileSaving}>
                             Save
-            </button>
-          </div>
+                          </button>
+                        </div>
                       </form>
 
                       <form className="card" style={{ padding: '16px' }} onSubmit={changePassword}>
@@ -1627,7 +1654,7 @@ export default function Home() {
                             onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                             required
                           />
-        </div>
+                        </div>
                         <div className="admin-form-group">
                           <label className="admin-form-label">New password</label>
                           <input
@@ -1637,7 +1664,7 @@ export default function Home() {
                             onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                             required
                           />
-      </div>
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                           <button type="submit" className="admin-btn admin-btn--primary" disabled={profileSaving}>
                             Update password
@@ -1732,7 +1759,7 @@ export default function Home() {
 
           <div style={{ padding: '24px 20px 10px', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Quick Actions
-        </div>
+          </div>
 
           <button
             onClick={() => setShowTransferModal(true)}
@@ -1754,7 +1781,7 @@ export default function Home() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
             <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
               {String(user?.username || 'U').charAt(0).toUpperCase()}
-              </div>
+            </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ color: '#fff', fontWeight: '600', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {user?.username}
@@ -1781,20 +1808,20 @@ export default function Home() {
             </h1>
             <p style={{ fontSize: '14px', color: '#64748b', margin: 0, fontWeight: '500' }}>
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
-            </div>
+            </p>
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: '#f1f5f9', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#475569' }}>
               Balance: <span style={{ color: '#10b981' }}>${Number(account?.balance ?? 0).toFixed(2)}</span>
             </div>
-              <button 
+            <button
               className="admin-btn admin-btn--secondary"
               onClick={openUserInfo}
               style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '13px' }}
             >
               👤 Profile
-              </button>
+            </button>
           </div>
         </header>
 
@@ -1838,52 +1865,62 @@ export default function Home() {
                 </div>
 
                 {/* Total Enrollments */}
-                <div style={{
-                  background: 'white',
-                  borderRadius: '16px',
-                  padding: '32px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid #f1f5f9'
-                }}>
+                <div
+                  onClick={() => setActiveTab('enrollments')}
+                  className="hover-card"
+                  style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '32px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    border: '1px solid #f1f5f9',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s, box-shadow 0.2s'
+                  }}>
                   <div style={{ fontSize: '14px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
                     📈 Total Enrollments
                   </div>
                   <div style={{ fontSize: '48px', fontWeight: '800', color: '#3b82f6' }}>
-                  {myEnrollments.length}
-              </div>
+                    {myEnrollments.length}
+                  </div>
                   <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>Click to view details</div>
                 </div>
 
                 {/* Total Transactions */}
-                <div style={{
-                  background: 'white',
-                  borderRadius: '16px',
-                  padding: '32px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid #f1f5f9'
-                }}>
+                <div
+                  onClick={() => setActiveTab('history')}
+                  className="hover-card"
+                  style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    padding: '32px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    border: '1px solid #f1f5f9',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s, box-shadow 0.2s'
+                  }}>
                   <div style={{ fontSize: '14px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
                     📜 Total Transactions
                   </div>
                   <div style={{ fontSize: '48px', fontWeight: '800', color: '#10b981' }}>
-                  {myTransactions.length}
+                    {myTransactions.length}
                   </div>
                   <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '8px' }}>Lifetime activity</div>
+                </div>
               </div>
-            </div>
 
               {/* Recent Activity Section */}
               <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #f1f5f9' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div>
                     <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#1e293b' }}>📜 Recent Transactions</h3>
                     <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>Overview of your latest financial activity.</p>
                   </div>
@@ -1896,49 +1933,90 @@ export default function Home() {
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {myTransactions.length > 0 ? (
-                    myTransactions.slice(0, 5).map((tx: any) => (
-                      <div key={tx.id} style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '16px', background: '#f8fafc', borderRadius: '12px',
-                        borderLeft: `4px solid ${tx.type === 'DEPOSIT' || tx.type === 'REFUND' ? '#10b981' : '#ef4444'}`
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                          <div style={{
-                            width: '40px', height: '40px', borderRadius: '10px',
-                            background: tx.type === 'DEPOSIT' || tx.type === 'REFUND' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                            color: tx.type === 'DEPOSIT' || tx.type === 'REFUND' ? '#10b981' : '#ef4444',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px'
-                          }}>
-                            {tx.type === 'DEPOSIT' || tx.type === 'REFUND' ? '↓' : '↑'}
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: '600', color: '#334155', marginBottom: '2px' }}>
-                              {tx.description || 'No description'}
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                              {new Date(tx.createdAt).toLocaleString()} • #{tx.id}
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ fontWeight: '700', fontSize: '16px', color: tx.type === 'DEPOSIT' || tx.type === 'REFUND' ? '#10b981' : '#ef4444' }}>
-                          {tx.type === 'DEPOSIT' || tx.type === 'REFUND' ? '+' : '-'}${Number(tx.amount).toFixed(2)}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
-                      No recent transactions found.
+                {/* Dashboard Quick Search */}
+                <div style={{ marginBottom: '16px' }}>
+                  <input
+                    type="text"
+                    placeholder="🔍 Search recent transactions..."
+                    value={dashboardTxSearch}
+                    onChange={(e) => setDashboardTxSearch(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '13px',
+                      background: '#f8fafc'
+                    }}
+                  />
                 </div>
-              )}
-                </div>
-            </div>
-          </div>
-        )}
 
-        {activeTab === 'courses' && (
-          <div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {(() => {
+                    const filtered = myTransactions.filter((tx: any) =>
+                      (tx.description || '').toLowerCase().includes(dashboardTxSearch.toLowerCase()) ||
+                      (tx.type || '').toLowerCase().includes(dashboardTxSearch.toLowerCase())
+                    );
+
+                    return filtered.length > 0 ? (
+                      filtered.slice(0, 5).map((tx: any, index: number) => {
+                        // Sign Logic
+                        const currentUserId = userInfo?.id || user?.id;
+                        let isPositive = false;
+                        if (tx.toUserId && tx.toUserId === currentUserId) isPositive = true;
+                        else if (tx.type === 'DEPOSIT' || tx.type === 'REFUND') isPositive = true;
+
+                        return (
+                          <div
+                            key={tx.id}
+                            onClick={() => { setSelectedTransaction(tx); setShowTransactionDetailModal(true); }}
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              padding: '16px 0',
+                              borderBottom: index < filtered.slice(0, 5).length - 1 ? '1px solid #f1f5f9' : 'none',
+                              cursor: 'pointer',
+                              transition: 'background 0.2s',
+                            }}
+                            className="hover-bg-slate-50"
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{
+                                width: '42px', height: '42px', borderRadius: '50%',
+                                background: isPositive ? '#ecfdf5' : '#fef2f2',
+                                color: isPositive ? '#10b981' : '#ef4444',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
+                                flexShrink: 0
+                              }}>
+                                {isPositive ? '↓' : '↑'}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: '600', color: '#334155', marginBottom: '2px', fontSize: '14px' }}>
+                                  {tx.description || 'No description'}
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                  {new Date(tx.createdAt).toLocaleDateString()} • {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                              </div>
+                            </div>
+                            <div style={{ fontWeight: '600', fontSize: '14px', color: isPositive ? '#10b981' : '#ef4444' }}>
+                              {isPositive ? '+' : '-'}${Math.abs(Number(tx.amount)).toFixed(2)}
+                            </div>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
+                        No transactions found matching "{dashboardTxSearch}".
+                      </div>
+                    )
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'courses' && (
+            <div>
               <h2>Available Courses</h2>
               <div className="courses-grid">
                 {courses.map(course => {
@@ -1975,7 +2053,7 @@ export default function Home() {
                   <div>
                     <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>My Enrollments</h2>
                     <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>Manage and track your subscribed courses.</p>
-                      </div>
+                  </div>
                   <div style={{ padding: '6px 12px', background: '#eff6ff', borderRadius: '99px', color: '#3b82f6', fontSize: '12px', fontWeight: '600' }}>
                     {myEnrollments.length} Active
                   </div>
@@ -2051,7 +2129,7 @@ export default function Home() {
                                   title="Start Learning"
                                 >
                                   Go to Learn
-                        </button>
+                                </button>
                               </td>
                             </tr>
                           )
@@ -2064,25 +2142,25 @@ export default function Home() {
                     <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎓</div>
                     <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b', margin: '0 0 8px' }}>No enrollments yet</h3>
                     <p style={{ color: '#64748b', margin: '0 0 24px', fontSize: '14px' }}>You haven't enrolled in any courses yet.</p>
-                        <button
+                    <button
                       onClick={() => setActiveTab('courses')}
-                          className="btn btn-primary"
+                      className="btn btn-primary"
                       style={{ padding: '10px 20px' }}
-                        >
+                    >
                       Browse Courses
-                        </button>
+                    </button>
                   </div>
-                      )}
-                    </div>
-          </div>
-        )}
+                )}
+              </div>
+            </div>
+          )}
 
-        {activeTab === 'history' && (
+          {activeTab === 'history' && (
             <div className="animate-fade-in">
               <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #f1f5f9' }}>
                 <div style={{ marginBottom: '24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div>
+                    <div>
                       <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>Transaction History</h2>
                       <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>Track all your financial activities and payments.</p>
                     </div>
@@ -2152,10 +2230,10 @@ export default function Home() {
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Description</th>
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Date</th>
                           <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', borderRadius: '0 8px 8px 0' }}>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                        {myTransactions.map((tx: any) => {
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredMyTransactions.map((tx: any) => {
                           // Safe date formatting
                           let dateDisplay = 'N/A';
                           try {
@@ -2167,10 +2245,19 @@ export default function Home() {
                             }
                           } catch (e) { console.error('Date error', e) }
 
-                          const isPositive = tx.type === 'DEPOSIT' || tx.type === 'REFUND';
+                          // Determine sign based on flow:
+                          const currentUserId = userInfo?.id || user?.id;
+                          let isPositive = false;
+                          if (tx.toUserId && tx.toUserId === currentUserId) isPositive = true;
+                          else if (tx.type === 'DEPOSIT' || tx.type === 'REFUND') isPositive = true;
 
                           return (
-                            <tr key={tx.id} className="hover-row" style={{ transition: 'background 0.2s' }}>
+                            <tr
+                              key={tx.id}
+                              className="hover-row"
+                              onClick={() => { setSelectedTransaction(tx); setShowTransactionDetailModal(true); }}
+                              style={{ transition: 'background 0.2s', cursor: 'pointer' }}
+                            >
                               <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
                                 <span className={`status-badge status-${(tx.type || 'unknown').toLowerCase()}`} style={{ padding: '4px 10px', borderRadius: '99px', fontSize: '12px', fontWeight: '600', textTransform: 'capitalize' }}>
                                   {tx.type}
@@ -2183,69 +2270,114 @@ export default function Home() {
                                 {dateDisplay}
                               </td>
                               <td style={{ padding: '16px', borderBottom: '1px solid #f1f5f9', textAlign: 'right', fontWeight: 'bold', color: isPositive ? '#10b981' : '#ef4444' }}>
-                                {isPositive ? '+' : '-'}${Number(tx.amount).toFixed(2)}
+                                {isPositive ? '+' : '-'}${Math.abs(Number(tx.amount)).toFixed(2)}
                               </td>
-                      </tr>
+                            </tr>
                           )
                         })}
-                  </tbody>
-                </table>
-              </div>
+                      </tbody>
+                    </table>
+                  </div>
                 ) : (
                   <div style={{ textAlign: 'center', padding: '60px 20px' }}>
                     <div style={{ fontSize: '48px', marginBottom: '16px' }}>📜</div>
                     <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b', margin: '0 0 8px' }}>No transactions yet</h3>
                     <p style={{ color: '#64748b', margin: '0 0 24px', fontSize: '14px' }}>Your transaction history will appear here.</p>
-          </div>
-        )}
-      </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {/* Modals */}
-      {showTransferModal && (
-        <div className="modal" onClick={() => setShowTransferModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+          {showTransferModal && (
+            <div className="modal" onClick={() => setShowTransferModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
                   <h2>💸 Transfer Money</h2>
-              <button className="close-btn" onClick={() => setShowTransferModal(false)}>×</button>
-            </div>
+                  <button className="close-btn" onClick={() => setShowTransferModal(false)}>×</button>
+                </div>
                 <form onSubmit={transfer} style={{ padding: '20px 0' }}>
-              <div className="form-group">
-                    <label>To User ID</label>
-                <input
-                      type="number"
-                      placeholder="Enter recipient ID"
-                  value={transferForm.toUserId}
-                  onChange={(e) => setTransferForm({ ...transferForm, toUserId: e.target.value })}
+                  <div className="form-group" style={{ position: 'relative' }}>
+                    <label>To User ID / Name</label>
+                    <input
+                      type="text"
+                      placeholder="Search by ID or Name"
+                      value={transferSearchTerm}
+                      onFocus={() => {
+                        setShowTransferSearchConfig(true)
+                        // If existing ID is selected, clear search to show all or specific (up to preference, keeping it simple)
+                      }}
+                      onChange={(e) => {
+                        setTransferSearchTerm(e.target.value)
+                        setShowTransferSearchConfig(true)
+                        // If user manually types a number, we could try to sync it, but better to force selection
+                      }}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db' }}
                     />
-              </div>
-              <div className="form-group">
+                    {/* Search Results Dropdown */}
+                    {showTransferSearchConfig && (
+                      <div style={{
+                        position: 'absolute', top: '100%', left: 0, right: 0,
+                        background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px',
+                        maxHeight: '200px', overflowY: 'auto', zIndex: 10,
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                      }}>
+                        {transferStudentsList
+                          .filter(s =>
+                            s.id !== (userInfo?.id || user?.id) && // Exclude self
+                            (s.name.toLowerCase().includes(transferSearchTerm.toLowerCase()) ||
+                              s.id.toString().includes(transferSearchTerm))
+                          )
+                          .map(s => (
+                            <div
+                              key={s.id}
+                              className="hover-row"
+                              style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f8fafc' }}
+                              onClick={() => {
+                                setTransferForm({ ...transferForm, toUserId: s.id.toString() });
+                                setTransferSearchTerm(`${s.name} (ID: ${s.id})`);
+                                setShowTransferSearchConfig(false);
+                              }}
+                            >
+                              <span style={{ fontWeight: '600', color: '#1e293b' }}>{s.name}</span>
+                              <span style={{ fontSize: '12px', color: '#64748b', marginLeft: '8px' }}>#{s.id}</span>
+                            </div>
+                          ))}
+                        {/* Empty state */}
+                        {transferStudentsList.filter(s => s.id !== (userInfo?.id || user?.id) && (s.name.toLowerCase().includes(transferSearchTerm.toLowerCase()) || s.id.toString().includes(transferSearchTerm))).length === 0 && (
+                          <div style={{ padding: '12px', color: '#94a3b8', fontSize: '13px', textAlign: 'center' }}>No users found</div>
+                        )}
+                      </div>
+                    )}
+                    {/* Hidden click-away handler could be added but for now click selection closes it */}
+                  </div>
+                  <div className="form-group">
                     <label>Amount ($)</label>
-                <input
-                  type="number"
+                    <input
+                      type="number"
                       placeholder="0.00"
-                  value={transferForm.amount}
-                  onChange={(e) => setTransferForm({ ...transferForm, amount: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Description</label>
-                <input
-                  type="text"
+                      value={transferForm.amount}
+                      onChange={(e) => setTransferForm({ ...transferForm, amount: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Description</label>
+                    <input
+                      type="text"
                       placeholder="What is this for?"
-                  value={transferForm.description}
-                  onChange={(e) => setTransferForm({ ...transferForm, description: e.target.value })}
-                />
+                      value={transferForm.description}
+                      onChange={(e) => setTransferForm({ ...transferForm, description: e.target.value })}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <button type="submit" className="btn btn-primary">Transfer</button>
+                    <button type="button" onClick={() => setShowTransferModal(false)} className="btn" style={{ background: '#f0f0f0' }}>Cancel</button>
+                  </div>
+                </form>
               </div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                <button type="submit" className="btn btn-primary">Transfer</button>
-                <button type="button" onClick={() => setShowTransferModal(false)} className="btn" style={{ background: '#f0f0f0' }}>Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+          )}
 
           {/* Course Detail Modal */}
           {showCourseDetailModal && selectedCourse && (
@@ -2457,78 +2589,137 @@ export default function Home() {
             </div>
           )}
 
-      {/* Notification Toast */}
-      {notification.show && (
-        <div className={`notification notification-${notification.type}`}>
-          <div className="notification-content">
-            <div className="notification-icon">
-              {notification.type === 'success' && '✅'}
-              {notification.type === 'error' && '❌'}
-              {notification.type === 'info' && 'ℹ️'}
-              {notification.type === 'warning' && '⚠️'}
-            </div>
-            <div className="notification-text">
-              <div className="notification-title">{notification.title}</div>
-              <div className="notification-message">{notification.message}</div>
-              {notification.tempPassword && (
-                <div className="notification-password">
-                  <strong>🔑 Temporary Password:</strong>
-                  <code style={{ 
-                    background: 'rgba(0,0,0,0.1)', 
-                    padding: '4px 8px', 
-                    borderRadius: '4px',
-                    marginLeft: '8px',
-                    fontFamily: 'monospace',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                        color: '#4f46e5'
-                  }}>
-                    {notification.tempPassword}
-                  </code>
+          {/* Notification Toast */}
+          {notification.show && (
+            <div className={`notification notification-${notification.type}`}>
+              <div className="notification-content">
+                <div className="notification-icon">
+                  {notification.type === 'success' && '✅'}
+                  {notification.type === 'error' && '❌'}
+                  {notification.type === 'info' && 'ℹ️'}
+                  {notification.type === 'warning' && '⚠️'}
                 </div>
-              )}
+                <div className="notification-text">
+                  <div className="notification-title">{notification.title}</div>
+                  <div className="notification-message">{notification.message}</div>
+                  {notification.tempPassword && (
+                    <div className="notification-password">
+                      <strong>🔑 Temporary Password:</strong>
+                      <code style={{
+                        background: 'rgba(0,0,0,0.1)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        marginLeft: '8px',
+                        fontFamily: 'monospace',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        color: '#4f46e5'
+                      }}>
+                        {notification.tempPassword}
+                      </code>
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="notification-close"
+                  onClick={() => setNotification({ ...notification, show: false })}
+                >
+                  ×
+                </button>
+              </div>
             </div>
-            <button 
-              className="notification-close"
-              onClick={() => setNotification({ ...notification, show: false })}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Confirm Modal */}
-      {confirmModal.show && (
-        <div className="modal" onClick={() => setConfirmModal({ ...confirmModal, show: false })}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
-            <div className="modal-header">
-              <h2>{confirmModal.title}</h2>
-              <button className="close-btn" onClick={() => setConfirmModal({ ...confirmModal, show: false })}>×</button>
+          {/* Transaction Detail Modal */}
+          {showTransactionDetailModal && selectedTransaction && (
+            <div className="modal" onClick={() => setShowTransactionDetailModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', borderRadius: '20px', padding: '0', overflow: 'hidden' }}>
+                <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#1e293b' }}>Transaction Details</h3>
+                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>#{selectedTransaction.id}</p>
+                  </div>
+                  <button onClick={() => setShowTransactionDetailModal(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>&times;</button>
+                </div>
+
+                <div style={{ padding: '24px' }}>
+                  <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                    <div style={{
+                      fontSize: '32px', fontWeight: '800',
+                      color: (selectedTransaction.toUserId === (userInfo?.id || user?.id) || ['DEPOSIT', 'REFUND'].includes(selectedTransaction.type)) ? '#10b981' : '#ef4444',
+                      marginBottom: '8px'
+                    }}>
+                      {(selectedTransaction.toUserId === (userInfo?.id || user?.id) || ['DEPOSIT', 'REFUND'].includes(selectedTransaction.type)) ? '+' : '-'}${Math.abs(Number(selectedTransaction.amount)).toFixed(2)}
+                    </div>
+                    <div className={`status-badge status-${(selectedTransaction.type || 'unknown').toLowerCase()}`} style={{ display: 'inline-block', padding: '6px 16px', borderRadius: '99px', fontSize: '13px', fontWeight: '600', textTransform: 'capitalize' }}>
+                      {selectedTransaction.type}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', background: '#f8fafc', padding: '20px', borderRadius: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748b', fontSize: '13px', fontWeight: '500' }}>Date</span>
+                      <span style={{ color: '#1e293b', fontSize: '13px', fontWeight: '600' }}>{new Date(selectedTransaction.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748b', fontSize: '13px', fontWeight: '500' }}>Description</span>
+                      <span style={{ color: '#1e293b', fontSize: '13px', fontWeight: '600', textAlign: 'right', maxWidth: '60%' }}>{selectedTransaction.description}</span>
+                    </div>
+                    {selectedTransaction.fromUserId && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#64748b', fontSize: '13px', fontWeight: '500' }}>From User ID</span>
+                        <span style={{ color: '#1e293b', fontSize: '13px', fontWeight: '600' }}>#{selectedTransaction.fromUserId}</span>
+                      </div>
+                    )}
+                    {selectedTransaction.toUserId && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#64748b', fontSize: '13px', fontWeight: '500' }}>To User ID</span>
+                        <span style={{ color: '#1e293b', fontSize: '13px', fontWeight: '600' }}>#{selectedTransaction.toUserId}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ marginTop: '24px' }}>
+                    <button onClick={() => setShowTransactionDetailModal(false)} className="btn-primary" style={{ width: '100%', padding: '12px', borderRadius: '8px' }}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div style={{ padding: '20px 0', fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
-              {confirmModal.message}
+          )}
+
+          {/* Confirm Modal */}
+          {confirmModal.show && (
+            <div className="modal" onClick={() => setConfirmModal({ ...confirmModal, show: false })}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+                <div className="modal-header">
+                  <h2>{confirmModal.title}</h2>
+                  <button className="close-btn" onClick={() => setConfirmModal({ ...confirmModal, show: false })}>×</button>
+                </div>
+                <div style={{ padding: '20px 0', fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
+                  {confirmModal.message}
+                </div>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmModal({ ...confirmModal, show: false })}
+                    className="btn"
+                    style={{ background: '#f0f0f0', color: '#333' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmModal.onConfirm}
+                    className="btn btn-primary"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                onClick={() => setConfirmModal({ ...confirmModal, show: false })}
-                className="btn"
-                style={{ background: '#f0f0f0', color: '#333' }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmModal.onConfirm}
-                className="btn btn-primary"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
         </div>
       </main>
     </div>

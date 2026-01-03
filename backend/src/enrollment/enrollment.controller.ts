@@ -1,10 +1,10 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import {
-    ApiBearerAuth,
-    ApiOperation,
-    ApiParam,
-    ApiResponse,
-    ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '../auth/entities/role.enum';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
