@@ -12,6 +12,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -20,8 +21,8 @@ export function LoginForm({ onLogin }: LoginFormProps) {
 
         try {
             const res = await axios.post(`${API_URL}/auth/login`, { username, password })
-            const { token, user } = res.data
-            localStorage.setItem('token', token)
+            const { access_token, user } = res.data
+            localStorage.setItem('token', access_token)
             localStorage.setItem('user', JSON.stringify(user))
             onLogin(user)
         } catch (err: any) {
@@ -33,67 +34,72 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     }
 
     return (
-        <div className="login-container">
-            <div className="login-card">
-                <div className="login-header">
-                    <div className="login-icon">🔐</div>
-                    <h1 className="login-title">Welcome Back</h1>
-                    <p className="login-subtitle">Sign in to your student portal</p>
+        <div className="login-page">
+            <div className="login-panel">
+                <div className="login-hero">
+                    <div className="login-hero__badge">Student Portal</div>
+                    <div className="login-hero__title">Welcome back</div>
+                    <div className="login-hero__subtitle">Sign in to continue to your dashboard.</div>
                 </div>
 
                 {error && (
-                    <div className="login-alert">
-                        <span className="login-alert-icon">⚠️</span>
-                        {error}
+                    <div className="login-alert" role="alert">
+                        <div className="login-alert__icon" aria-hidden="true">⚠️</div>
+                        <div className="login-alert__text">{error}</div>
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="login-form">
-                    <div className="login-form-group">
-                        <label className="login-label" htmlFor="username">Username</label>
-                        <div className="login-input-wrapper">
-                            <span className="login-input-icon">👤</span>
+                    <div className="login-field">
+                        <label className="login-field__label" htmlFor="username">Username</label>
+                        <div className="login-field__control">
+                            <span className="login-field__icon" aria-hidden="true">👤</span>
                             <input
                                 id="username"
                                 type="text"
-                                className="login-input"
+                                className="login-field__input"
                                 placeholder="Enter your username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
+                                autoComplete="username"
                                 required
                             />
                         </div>
                     </div>
 
-                    <div className="login-form-group">
-                        <label className="login-label" htmlFor="password">Password</label>
-                        <div className="login-input-wrapper">
-                            <span className="login-input-icon">🔒</span>
+                    <div className="login-field">
+                        <label className="login-field__label" htmlFor="password">Password</label>
+                        <div className="login-field__control">
+                            <span className="login-field__icon" aria-hidden="true">🔒</span>
                             <input
                                 id="password"
-                                type="password"
-                                className="login-input"
+                                type={showPassword ? 'text' : 'password'}
+                                className="login-field__input"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                autoComplete="current-password"
                                 required
                             />
+                            <button
+                                type="button"
+                                className="login-field__toggle"
+                                onClick={() => setShowPassword((v) => !v)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? 'Hide' : 'Show'}
+                            </button>
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        className={`login-btn ${loading ? 'loading' : ''}`}
-                        disabled={loading}
-                    >
-                        {loading ? 'Signing In...' : 'Sign In'}
-                        {!loading && <span className="login-arrow">→</span>}
+                    <button type="submit" className={`login-submit ${loading ? 'is-loading' : ''}`} disabled={loading}>
+                        {loading ? 'Signing in…' : 'Sign in'}
                     </button>
-                </form>
 
-                <div className="login-footer">
-                    <p>Don't have an account? Ask your administrator.</p>
-                </div>
+                    <div className="login-hint">
+                        Don’t have an account? <span className="login-hint__strong">Ask your administrator.</span>
+                    </div>
+                </form>
             </div>
         </div>
     )
