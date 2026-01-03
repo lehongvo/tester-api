@@ -7,12 +7,14 @@ import { User } from '../auth/entities/user.entity';
 import { Student } from '../student/entities/student.entity';
 import { AccountModule } from '../account/account.module';
 import { TransactionModule } from '../transaction/transaction.module';
+import { VoucherModule } from '../voucher/voucher.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Student]),
     AccountModule,
     TransactionModule,
+    VoucherModule,
   ],
   controllers: [AdminController, AdminFixController],
   providers: [AdminService],

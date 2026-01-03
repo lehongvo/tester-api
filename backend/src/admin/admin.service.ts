@@ -1,13 +1,14 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../auth/entities/user.entity';
-import { Role } from '../auth/entities/role.enum';
-import { Student } from '../student/entities/student.entity';
+import { Repository } from 'typeorm';
 import { AccountService } from '../account/account.service';
-import { TransactionService } from '../transaction/transaction.service';
+import { Role } from '../auth/entities/role.enum';
+import { User } from '../auth/entities/user.entity';
+import { Student } from '../student/entities/student.entity';
 import { TransactionType } from '../transaction/entities/transaction.entity';
+import { TransactionService } from '../transaction/transaction.service';
+import { VoucherService } from '../voucher/voucher.service';
 import { CreateStudentUserDto } from './dto/create-student-user.dto';
 import { SetBalanceDto } from './dto/set-balance.dto';
 
@@ -20,6 +21,7 @@ export class AdminService {
     private studentRepository: Repository<Student>,
     private accountService: AccountService,
     private transactionService: TransactionService,
+    private voucherService: VoucherService,
   ) {}
 
   async createStudentUser(createDto: CreateStudentUserDto) {
@@ -106,6 +108,9 @@ export class AdminService {
       TransactionType.Adjustment,
       'Initial account balance',
     );
+
+    // Auto-generate 10 vouchers for the new student
+    await this.voucherService.generateVouchersForUser(savedUser.id, 10);
 
     return {
       user: {

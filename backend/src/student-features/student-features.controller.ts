@@ -1,25 +1,26 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
   Param,
-  Body,
-  UseGuards,
+  Post,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
+  ApiOperation,
   ApiParam,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../auth/entities/role.enum';
-import { StudentFeaturesService } from './student-features.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { BuyCourseDto } from './dto/buy-course.dto';
 import { TransferDto } from './dto/transfer.dto';
+import { StudentFeaturesService } from './student-features.service';
 
 @ApiTags('student-features')
 @ApiBearerAuth('JWT-auth')
@@ -64,7 +65,14 @@ export class StudentFeaturesController {
   @Post('courses/:id/buy')
   @ApiOperation({
     summary: '🛒 Buy Course (Student Only)',
-    description: 'Purchase a course using account balance. Only students can access this endpoint.',
+    description: `
+Purchase a course using account balance.
+
+**Voucher Support:**
+- Optional request body: { "voucherCode": "VCH-XXXXXXXX" }
+- Voucher must belong to the user and be unused.
+- Discount percent: 10% .. 45%
+    `,
   })
   @ApiParam({ name: 'id', description: 'Course ID', type: Number })
   @ApiResponse({ status: 201, description: 'Course purchased successfully' })
@@ -72,8 +80,8 @@ export class StudentFeaturesController {
   @ApiResponse({ status: 404, description: 'Course not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Student role required' })
-  async buyCourse(@Request() req, @Param('id') id: string) {
-    return this.studentFeaturesService.buyCourse(req.user.userId, +id);
+  async buyCourse(@Request() req, @Param('id') id: string, @Body() body: BuyCourseDto) {
+    return this.studentFeaturesService.buyCourse(req.user.userId, +id, body?.voucherCode);
   }
 
   @Get('transactions/history')

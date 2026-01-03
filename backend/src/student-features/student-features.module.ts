@@ -7,6 +7,7 @@ import { AccountModule } from '../account/account.module';
 import { TransactionModule } from '../transaction/transaction.module';
 import { CourseModule } from '../course/course.module';
 import { EnrollmentModule } from '../enrollment/enrollment.module';
+import { VoucherModule } from '../voucher/voucher.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { EnrollmentModule } from '../enrollment/enrollment.module';
     TransactionModule,
     CourseModule,
     EnrollmentModule,
+    VoucherModule,
   ],
   controllers: [StudentFeaturesController],
   providers: [StudentFeaturesService],

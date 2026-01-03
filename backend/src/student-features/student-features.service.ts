@@ -1,14 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../auth/entities/user.entity';
-import { Role } from '../auth/entities/role.enum';
 import { AccountService } from '../account/account.service';
-import { TransactionService } from '../transaction/transaction.service';
-import { TransactionType } from '../transaction/entities/transaction.entity';
+import { Role } from '../auth/entities/role.enum';
+import { User } from '../auth/entities/user.entity';
 import { CourseService } from '../course/course.service';
 import { EnrollmentService } from '../enrollment/enrollment.service';
 import { PaymentStatus } from '../enrollment/entities/enrollment.entity';
+import { TransactionType } from '../transaction/entities/transaction.entity';
+import { TransactionService } from '../transaction/transaction.service';
+import { VoucherService } from '../voucher/voucher.service';
 import { TransferDto } from './dto/transfer.dto';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class StudentFeaturesService {
     private transactionService: TransactionService,
     private courseService: CourseService,
     private enrollmentService: EnrollmentService,
+    private voucherService: VoucherService,
   ) {}
 
   async getMyAccount(userId: number) {
@@ -87,7 +89,7 @@ export class StudentFeaturesService {
     };
   }
 
-  async buyCourse(userId: number, courseId: number) {
+  async buyCourse(userId: number, courseId: number, voucherCode?: string) {
     // Check if course exists
     const course = await this.courseService.findOne(courseId);
 
@@ -97,17 +99,28 @@ export class StudentFeaturesService {
       throw new BadRequestException('Already enrolled in this course');
     }
 
-    // Check balance
+    // Check balance (+ optional voucher)
     const account = await this.accountService.getAccountByUserId(userId);
     const balance = parseFloat(account.balance.toString());
-    const price = parseFloat(course.price.toString());
+    const originalPrice = parseFloat(course.price.toString());
 
-    if (balance < price) {
+    let finalPrice = originalPrice;
+    let appliedVoucherPercent: number | null = null;
+
+    if (voucherCode) {
+      const voucher = await this.voucherService.validateForPurchase({ userId, courseId, voucherCode });
+      if (voucher) {
+        appliedVoucherPercent = voucher.percent;
+        finalPrice = Math.round(originalPrice * (1 - voucher.percent / 100) * 100) / 100;
+      }
+    }
+
+    if (balance < finalPrice) {
       throw new BadRequestException('Insufficient balance to purchase this course');
     }
 
     // Deduct balance
-    await this.accountService.adjustBalance(userId, -price);
+    await this.accountService.adjustBalance(userId, -finalPrice);
 
     // Create enrollment
     const enrollment = await this.enrollmentService.createEnrollment(
@@ -116,19 +129,36 @@ export class StudentFeaturesService {
       PaymentStatus.Paid,
     );
 
+    // Mark voucher used (if applied)
+    if (voucherCode && appliedVoucherPercent !== null) {
+      await this.voucherService.markUsedByCode({ userId, voucherCode, courseId });
+    }
+
     // Log transaction
+    const paymentDescription = appliedVoucherPercent
+      ? `Course purchase: ${course.name} (voucher ${voucherCode} -${appliedVoucherPercent}%)`
+      : `Course purchase: ${course.name}`;
+
     await this.transactionService.createTransaction(
       userId,
       null,
-      price,
+      finalPrice,
       TransactionType.Payment,
-      `Course purchase: ${course.name}`,
+      paymentDescription,
     );
 
     return {
       message: 'Course purchased successfully',
       enrollment,
       course,
+      originalPrice,
+      finalPrice,
+      appliedVoucher: appliedVoucherPercent
+        ? {
+            code: voucherCode,
+            percent: appliedVoucherPercent,
+          }
+        : null,
       remainingBalance: await this.accountService.getBalance(userId),
     };
   }
