@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountModule } from './account/account.module';
 import { AdminModule } from './admin/admin.module';
@@ -41,6 +42,7 @@ import { VoucherModule } from './voucher/voucher.module';
     VoucherModule,
     StudentFeaturesModule,
     SeedModule,
+    ScheduleModule.forRoot(),
   ],
 })
-export class AppModule {}
+export class AppModule { }

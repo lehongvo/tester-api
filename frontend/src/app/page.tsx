@@ -24,10 +24,12 @@ import { UserInfoModal } from '../components/shared/UserInfoModal'
 import { CourseManagement } from '../components/admin/CourseManagement'
 import { StudentManagement } from '../components/admin/StudentManagement'
 import { TransactionManagement } from '../components/admin/TransactionManagement'
+import { VoucherManagement } from '../components/admin/VoucherManagement'
 
 // Student Components
 import { AvailableCourses } from '../components/student/AvailableCourses'
 import { MyEnrollments } from '../components/student/MyEnrollments'
+import { MyVouchers } from '../components/student/MyVouchers'
 import { StudentDashboard } from '../components/student/StudentDashboard'
 import { StudentSidebar } from '../components/student/StudentSidebar'
 import { StudentTransactions } from '../components/student/StudentTransactions'
@@ -40,9 +42,10 @@ export default function Home() {
   // Global State
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [appLoading, setAppLoading] = useState(true)
 
   // UI State
-  const [adminTab, setAdminTab] = useState<'students' | 'courses' | 'transactions'>('students')
+  const [adminTab, setAdminTab] = useState<'students' | 'courses' | 'transactions' | 'vouchers'>('students')
   const [activeTab, setActiveTab] = useState('dashboard') // Student Tab
 
   // Modals (Global/Specific)
@@ -62,6 +65,7 @@ export default function Home() {
   const [activeEnrollment, setActiveEnrollment] = useState<any>(null)
   const [showTransactionDetailModal, setShowTransactionDetailModal] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState<string | null>(null)
 
   // Forms
   const [transferForm, setTransferForm] = useState({
@@ -83,6 +87,7 @@ export default function Home() {
     students,
     courses: adminCourses,
     transactions: adminTransactions,
+    vouchers: adminVouchers,
     loading: adminLoading,
     error: adminError,
     notification: adminNotification,
@@ -101,6 +106,7 @@ export default function Home() {
     availableCourses: studentCourses,
     myEnrollments,
     myTransactions,
+    myVouchers,
     transferStudentsList,
     loading: studentLoading,
     error: studentError,
@@ -125,14 +131,34 @@ export default function Home() {
     }
   }
 
-  // Initial Auth Check
+  // Initial Auth Check & Verification
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const savedUser = localStorage.getItem('user')
-    if (token && savedUser) {
-      setIsAuthenticated(true)
-      setUser(JSON.parse(savedUser))
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token')
+      const savedUser = localStorage.getItem('user')
+
+      if (token && savedUser) {
+        try {
+          // Logic-First: Verify token with backend
+          const res = await axios.get(`${API_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+
+          setIsAuthenticated(true)
+          setUser(res.data)
+          localStorage.setItem('user', JSON.stringify(res.data))
+        } catch (err) {
+          console.error('Session verification failed:', err)
+          logout() // Clear stale localStorage
+        }
+      } else {
+        setIsAuthenticated(false)
+        setUser(null)
+      }
+      setAppLoading(false)
     }
+
+    checkAuth()
   }, [])
 
   // Data Fetching on Auth/Role Change
@@ -178,6 +204,33 @@ export default function Home() {
     localStorage.setItem('user', JSON.stringify(updatedUser))
   }
 
+  if (appLoading) {
+    return (
+      <div className="login-page" style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}>
+        <div style={{ color: 'white', textAlign: 'center' }}>
+          <div className="spinner" style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid rgba(255,255,255,0.3)',
+            borderTopColor: 'white',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }} />
+          <p style={{ fontSize: '18px', fontWeight: 500 }}>Verifying Session...</p>
+          <style>{`
+            @keyframes spin { to { transform: rotate(360deg); } }
+          `}</style>
+        </div>
+      </div>
+    )
+  }
+
   if (!isAuthenticated) {
     return (
       <LoginForm
@@ -202,6 +255,7 @@ export default function Home() {
           studentsCount={students.length}
           coursesCount={adminCourses.length}
           transactionsCount={adminTransactions.length}
+          vouchersCount={adminVouchers.length}
           setShowCreateStudentModal={setShowCreateStudentModal}
           setShowCreateCourseModal={setShowCreateCourseModal}
           openUserInfo={openUserInfo}
@@ -211,7 +265,8 @@ export default function Home() {
             title={
               adminTab === 'students' ? '👥 Student Management' :
                 adminTab === 'courses' ? '📚 Course Management' :
-                  '💳 Global Transactions'
+                  adminTab === 'vouchers' ? '🎟️ Voucher Management' :
+                    '💳 Global Transactions'
             }
             breadcrumb={`Admin / ${adminTab.charAt(0).toUpperCase() + adminTab.slice(1)}`}
             onRefresh={fetchAdminData}
@@ -250,6 +305,14 @@ export default function Home() {
                 setNotification={setAdminNotification}
               />
             )}
+
+            {adminTab === 'vouchers' && (
+              <VoucherManagement
+                vouchers={adminVouchers}
+                students={students}
+                loading={adminLoading}
+              />
+            )}
           </div>
         </main>
 
@@ -279,6 +342,7 @@ export default function Home() {
         setShowTransferModal={setShowTransferModal}
         logout={logout}
         openUserInfo={openUserInfo}
+        availableVouchersCount={myVouchers.filter((v: any) => !v.used).length}
       />
       <main className="admin-main">
         <Header
@@ -286,7 +350,8 @@ export default function Home() {
             activeTab === 'dashboard' ? 'Student Dashboard' :
               activeTab === 'courses' ? 'Available Courses' :
                 activeTab === 'enrollments' ? 'My Enrollments' :
-                  'Transaction History'
+                  activeTab === 'vouchers' ? '🎟️ My Vouchers' :
+                    'Transaction History'
           }
           breadcrumb={`Student / ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`}
           onRefresh={fetchStudentData}
@@ -338,6 +403,13 @@ export default function Home() {
               user={user}
               setSelectedTransaction={setSelectedTransaction}
               setShowTransactionDetailModal={setShowTransactionDetailModal}
+            />
+          )}
+
+          {activeTab === 'vouchers' && (
+            <MyVouchers
+              vouchers={myVouchers}
+              courses={studentCourses}
             />
           )}
         </div>

@@ -7,6 +7,7 @@ export const useAdminData = (logout: () => void) => {
     const [students, setStudents] = useState<Student[]>([])
     const [courses, setCourses] = useState<Course[]>([])
     const [transactions, setTransactions] = useState<Transaction[]>([])
+    const [vouchers, setVouchers] = useState<any[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [notification, setNotification] = useState<{
@@ -26,10 +27,11 @@ export const useAdminData = (logout: () => void) => {
         setLoading(true)
         setError('')
         try {
-            const [studentsWithBalancesRes, coursesRes, transactionsRes] = await Promise.all([
+            const [studentsWithBalancesRes, coursesRes, transactionsRes, vouchersRes] = await Promise.all([
                 axios.get(`${API_URL}/admin/students/with-balances`, { headers: getAuthHeaders() }),
                 axios.get(`${API_URL}/courses`, { headers: getAuthHeaders() }),
                 axios.get(`${API_URL}/admin/transactions`, { headers: getAuthHeaders() }),
+                axios.get(`${API_URL}/admin/vouchers`, { headers: getAuthHeaders() }).catch(() => ({ data: [] })),
             ])
             // Map students with balances to students array for display
             const studentsData = studentsWithBalancesRes.data.map((item: any) => ({
@@ -40,10 +42,12 @@ export const useAdminData = (logout: () => void) => {
                 address: item.student?.address,
                 balance: item.account.balance,
                 userId: item.user.id,
+                studentId: item.student?.studentId,
             }))
             setStudents(studentsData)
             setCourses(coursesRes.data)
             setTransactions(transactionsRes.data)
+            setVouchers(vouchersRes.data || [])
         } catch (err: any) {
             if (err.response?.status === 401) {
                 logout()
@@ -222,6 +226,7 @@ export const useAdminData = (logout: () => void) => {
         students,
         courses,
         transactions,
+        vouchers,
         loading,
         error,
         notification,

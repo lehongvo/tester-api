@@ -15,6 +15,7 @@ export interface Student {
     address?: string
     balance?: number
     userId?: number
+    studentId?: string
 }
 
 export interface Account {

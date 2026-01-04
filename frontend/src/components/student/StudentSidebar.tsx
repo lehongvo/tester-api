@@ -7,6 +7,7 @@ interface StudentSidebarProps {
     setShowTransferModal: (show: boolean) => void
     logout: () => void
     openUserInfo: () => void
+    availableVouchersCount?: number
 }
 
 export const StudentSidebar: React.FC<StudentSidebarProps> = ({
@@ -16,6 +17,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
     setShowTransferModal,
     logout,
     openUserInfo,
+    availableVouchersCount = 0,
 }) => {
     return (
         <aside className="admin-sidebar" style={{ background: '#0f172a' }}>
@@ -56,6 +58,16 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 >
                     <span className="admin-sidebar__item-icon">📜</span>
                     History
+                </button>
+                <button
+                    onClick={() => setActiveTab('vouchers')}
+                    className={`admin-sidebar__item ${activeTab === 'vouchers' ? 'active' : ''}`}
+                >
+                    <span className="admin-sidebar__item-icon">🎟️</span>
+                    <span className="admin-sidebar__item-text">My Vouchers</span>
+                    {availableVouchersCount > 0 && (
+                        <span className="admin-sidebar__item-badge">{availableVouchersCount}</span>
+                    )}
                 </button>
 
                 <div style={{ padding: '24px 20px 10px', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>

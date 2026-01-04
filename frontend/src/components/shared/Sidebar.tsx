@@ -3,11 +3,12 @@ import { User } from '../../types'
 
 interface SidebarProps {
     user: User | null
-    adminTab: 'students' | 'courses' | 'transactions'
-    setAdminTab: (tab: 'students' | 'courses' | 'transactions') => void
+    adminTab: 'students' | 'courses' | 'transactions' | 'vouchers'
+    setAdminTab: (tab: 'students' | 'courses' | 'transactions' | 'vouchers') => void
     studentsCount: number
     coursesCount: number
     transactionsCount: number
+    vouchersCount: number
     setShowCreateStudentModal: (show: boolean) => void
     setShowCreateCourseModal: (show: boolean) => void
     openUserInfo: () => void
@@ -20,6 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     studentsCount,
     coursesCount,
     transactionsCount,
+    vouchersCount,
     setShowCreateStudentModal,
     setShowCreateCourseModal,
     openUserInfo,
@@ -60,6 +62,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <span className="admin-sidebar__item-icon">💳</span>
                         <span className="admin-sidebar__item-text">Transactions</span>
                         <span className="admin-sidebar__item-badge">{transactionsCount}</span>
+                    </button>
+                    <button
+                        className={`admin-sidebar__item ${adminTab === 'vouchers' ? 'active' : ''}`}
+                        onClick={() => setAdminTab('vouchers')}
+                    >
+                        <span className="admin-sidebar__item-icon">🎟️</span>
+                        <span className="admin-sidebar__item-text">Vouchers</span>
+                        <span className="admin-sidebar__item-badge">{vouchersCount}</span>
                     </button>
                 </div>
 

@@ -1,14 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../auth/entities/user.entity';
-import { Role } from '../auth/entities/role.enum';
-import { Student } from '../student/entities/student.entity';
-import { Course } from '../course/entities/course.entity';
+import { Repository } from 'typeorm';
 import { AccountService } from '../account/account.service';
-import { TransactionService } from '../transaction/transaction.service';
+import { Role } from '../auth/entities/role.enum';
+import { User } from '../auth/entities/user.entity';
+import { Course } from '../course/entities/course.entity';
+import { Student } from '../student/entities/student.entity';
 import { TransactionType } from '../transaction/entities/transaction.entity';
+import { TransactionService } from '../transaction/transaction.service';
 
 @Injectable()
 export class SeedService implements OnModuleInit {
@@ -21,7 +21,7 @@ export class SeedService implements OnModuleInit {
     private courseRepository: Repository<Course>,
     private accountService: AccountService,
     private transactionService: TransactionService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.seed();
@@ -127,6 +127,7 @@ export class SeedService implements OnModuleInit {
 
       // Create student entity
       const student = this.studentRepository.create({
+        user: savedUser,
         name: studentNames[index],
         email: emails[index],
         age: 18 + (index % 5), // Age between 18-22

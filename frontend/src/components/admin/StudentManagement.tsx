@@ -26,6 +26,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
     showCreateModal,
 }) => {
     const [filter, setFilter] = useState('')
+    const [statusFilter, setStatusFilter] = useState<'all' | 'high' | 'low'>('all')
 
     // Create Student Form State
     const [createForm, setCreateForm] = useState({
@@ -57,14 +58,27 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
     })
 
     const filteredStudents = useMemo(() => {
+        let result = students
+
+        // Search filter
         const q = filter.trim().toLowerCase()
-        if (!q) return students
-        return students.filter((s) =>
-            [s.name, s.email, String(s.id), String(s.userId || '')]
-                .filter(Boolean)
-                .some((v) => String(v).toLowerCase().includes(q)),
-        )
-    }, [students, filter])
+        if (q) {
+            result = result.filter((s) =>
+                [s.name, s.email, String(s.id), String(s.userId || ''), s.studentId]
+                    .filter(Boolean)
+                    .some((v) => String(v).toLowerCase().includes(q)),
+            )
+        }
+
+        // Balance Filter
+        if (statusFilter === 'high') {
+            result = result.filter(s => (s.balance || 0) >= 10000)
+        } else if (statusFilter === 'low') {
+            result = result.filter(s => (s.balance || 0) < 1000)
+        }
+
+        return result
+    }, [students, filter, statusFilter])
 
     const handleCreateSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -135,6 +149,22 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
                             onChange={(e) => setFilter(e.target.value)}
                         />
                     </div>
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value as any)}
+                        style={{
+                            padding: '10px 14px',
+                            borderRadius: '10px',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '14px',
+                            background: '#f8fafc',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <option value="all">All Balances</option>
+                        <option value="high">High Balance (≥$10k)</option>
+                        <option value="low">Low Balance (&lt;$1k)</option>
+                    </select>
                     <button
                         className="admin-btn admin-btn--primary"
                         onClick={() => setShowCreateModal(true)}

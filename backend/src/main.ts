@@ -1,7 +1,40 @@
-import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+
+// Protect Swagger UI with HTTP Basic Auth
+// Default credentials: admin/admin123 (can be overridden via env)
+const swaggerBasicAuth = (username: string, password: string) => {
+  const header = (req: any) => req.headers?.authorization || req.headers?.Authorization || '';
+
+  return (req: any, res: any, next: any) => {
+    // Only protect swagger routes
+    const url = String(req.originalUrl || req.url || '');
+    if (!url.startsWith('/api')) return next();
+
+    const auth = String(header(req));
+    if (!auth.startsWith('Basic ')) {
+      res.setHeader('WWW-Authenticate', 'Basic realm="Swagger"');
+      return res.status(401).send('Authentication required');
+    }
+
+    const base64 = auth.slice('Basic '.length).trim();
+    let decoded = '';
+    try {
+      decoded = Buffer.from(base64, 'base64').toString('utf8');
+    } catch {
+      res.setHeader('WWW-Authenticate', 'Basic realm="Swagger"');
+      return res.status(401).send('Invalid authentication');
+    }
+
+    const [u, p] = decoded.split(':');
+    if (u === username && p === password) return next();
+
+    res.setHeader('WWW-Authenticate', 'Basic realm="Swagger"');
+    return res.status(401).send('Invalid credentials');
+  };
+};
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +54,11 @@ async function bootstrap() {
     transform: true, // Automatically transform payloads to DTO instances
   }));
   
+  // Swagger UI Basic Auth (protect /api and /api-json)
+  const swaggerUser = process.env.SWAGGER_USER || 'admin';
+  const swaggerPass = process.env.SWAGGER_PASS || 'admin123';
+  app.use(swaggerBasicAuth(swaggerUser, swaggerPass));
+
   // Swagger Configuration
   const config = new DocumentBuilder()
     .setTitle('School Banking System API')
