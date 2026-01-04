@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Course, Voucher } from '../../types'
+import { VoucherDetailModal } from './modals/VoucherDetailModal'
 
 interface MyVouchersProps {
     vouchers: Voucher[]
@@ -9,6 +10,7 @@ interface MyVouchersProps {
 export const MyVouchers: React.FC<MyVouchersProps> = ({ vouchers, courses }) => {
     const [showUsed, setShowUsed] = useState(false)
     const [copiedCode, setCopiedCode] = useState<string | null>(null)
+    const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null)
 
     const availableVouchers = vouchers.filter(v => !v.used)
     const usedVouchers = vouchers.filter(v => v.used)
@@ -56,6 +58,7 @@ export const MyVouchers: React.FC<MyVouchersProps> = ({ vouchers, courses }) => 
             }}
             onMouseEnter={(e) => !isUsed && (e.currentTarget.style.transform = 'translateY(-4px)')}
             onMouseLeave={(e) => !isUsed && (e.currentTarget.style.transform = 'translateY(0)')}
+            onClick={() => setSelectedVoucher(voucher)}
         >
             {/* Status Badge */}
             <div style={{
@@ -254,6 +257,13 @@ export const MyVouchers: React.FC<MyVouchersProps> = ({ vouchers, courses }) => 
                     )}
                 </div>
             )}
+
+            <VoucherDetailModal
+                show={!!selectedVoucher}
+                onClose={() => setSelectedVoucher(null)}
+                voucher={selectedVoucher}
+                courses={courses}
+            />
         </div>
     )
 }

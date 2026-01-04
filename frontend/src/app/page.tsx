@@ -35,6 +35,7 @@ import { StudentSidebar } from '../components/student/StudentSidebar'
 import { StudentTransactions } from '../components/student/StudentTransactions'
 import { CourseDetailModal } from '../components/student/modals/CourseDetailModal'
 import { CoursePlayerModal } from '../components/student/modals/CoursePlayerModal'
+import { PurchaseConfirmationModal } from '../components/student/modals/PurchaseConfirmationModal'
 import { TransactionDetailModal } from '../components/student/modals/TransactionDetailModal'
 import { TransferModal } from '../components/student/modals/TransferModal'
 
@@ -66,6 +67,8 @@ export default function Home() {
   const [showTransactionDetailModal, setShowTransactionDetailModal] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [selectedVoucherCode, setSelectedVoucherCode] = useState<string | null>(null)
+  const [showPurchaseConfirmModal, setShowPurchaseConfirmModal] = useState(false)
+  const [courseToBuy, setCourseToBuy] = useState<any>(null)
 
   // Forms
   const [transferForm, setTransferForm] = useState({
@@ -126,9 +129,15 @@ export default function Home() {
   }
 
   const handleBuyCourse = async (courseId: number) => {
-    if (window.confirm('Are you sure you want to purchase this course?')) {
-      await executePurchase(courseId)
+    const course = studentCourses.find(c => c.id === courseId)
+    if (course) {
+      setCourseToBuy(course)
+      setShowPurchaseConfirmModal(true)
     }
+  }
+
+  const handleConfirmPurchase = async (courseId: number, voucherCode: string | null) => {
+    await executePurchase(courseId, voucherCode || undefined)
   }
 
   // Initial Auth Check & Verification
@@ -462,6 +471,14 @@ export default function Home() {
         onClose={() => setShowTransactionDetailModal(false)}
         selectedTransaction={selectedTransaction}
         currentUserId={user?.id || 0}
+      />
+
+      <PurchaseConfirmationModal
+        show={showPurchaseConfirmModal}
+        onClose={() => setShowPurchaseConfirmModal(false)}
+        course={courseToBuy}
+        vouchers={myVouchers}
+        onConfirm={handleConfirmPurchase}
       />
     </div>
   )
